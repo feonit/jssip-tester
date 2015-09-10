@@ -221,6 +221,7 @@ var eventHandlers = {
     }
 };
 
+
 var dg = document.getElementById.bind(document);
 
 // buttons
