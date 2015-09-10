@@ -221,7 +221,7 @@ var eventHandlers = {
     }
 };
 
-var dg = document.getElementById;
+var dg = document.getElementById.bind(document);
 
 // buttons
 GUI.btnStart = dg('btnStart');
