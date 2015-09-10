@@ -84,7 +84,9 @@ var eventHandlers = {
         var configuration = {
             'ws_servers': GUI.fieldWS_URI.value,
             'uri': getSIP_URI_my(),
-            'password': GUI.fieldSIP_password.value
+            'password': GUI.fieldSIP_password.value,
+            'display_name': GUI.field_display_name.value,
+            log: { level: 'debug' }
         };
 
         var coolPhone = new JsSIP.UA(configuration);
@@ -219,23 +221,26 @@ var eventHandlers = {
     }
 };
 
+var dg = document.getElementById;
+
 // buttons
-GUI.btnStart = document.getElementById('btnStart');
-GUI.btnCall = document.getElementById('btnCall');
-GUI.btnSendMessage = document.getElementById('btnSendMessage');
+GUI.btnStart = dg('btnStart');
+GUI.btnCall = dg('btnCall');
+GUI.btnSendMessage = dg('btnSendMessage');
 
 // inputs
-GUI.fieldName = document.getElementById('fieldName');
-GUI.fieldWS_URI = document.getElementById('fieldWS_URI');
-GUI.fieldSIP_URI_name = document.getElementById('fieldSIP_URI_name');
-GUI.fieldSIP_URI_realm = document.getElementById('fieldSIP_URI_realm');
-GUI.fieldSIP_password = document.getElementById('fieldSIP_password');
-GUI.fieldAddresForMessage = document.getElementById('fieldAddresForMessage');
-GUI.fieldNumber = document.getElementById('fieldNumber');
+GUI.fieldName = dg('fieldName');
+GUI.fieldWS_URI = dg('fieldWS_URI');
+GUI.fieldSIP_URI_name = dg('fieldSIP_URI_name');
+GUI.fieldSIP_URI_realm = dg('fieldSIP_URI_realm');
+GUI.fieldSIP_password = dg('fieldSIP_password');
+GUI.fieldAddresForMessage = dg('fieldAddresForMessage');
+GUI.fieldNumber = dg('fieldNumber');
+GUI.field_display_name = dg('field_display_name');
 
 // videos
-GUI.selfView =   document.getElementById('my-video');
-GUI.remoteView =  document.getElementById('peer-video');
+GUI.selfView =   dg('my-video');
+GUI.remoteView =  dg('peer-video');
 
 
 // add handlers
