@@ -239,8 +239,12 @@ GUI.remoteView =  document.getElementById('peer-video');
 
 
 // add handlers
-GUI.btnStart.addEventListener('click', eventHandlers.onClickBtnStartSip, false );
-GUI.btnCall.addEventListener('click', eventHandlers.onClickBtnCallSip, false );
+if(GUI.btnStart){
+    GUI.btnStart.addEventListener('click', eventHandlers.onClickBtnStartSip, false );
+}
+if(GUI.btnCall){
+    GUI.btnCall.addEventListener('click', eventHandlers.onClickBtnCallSip, false );
+}
 if(GUI.btnSendMessage){
     GUI.btnSendMessage.addEventListener('click', eventHandlers.onClickBtnbtnSendMessageSip, false );
 }
