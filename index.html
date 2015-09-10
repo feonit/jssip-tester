@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+    <script src="libs/jssip.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="libs/bootstrap.css">
+</head>
+<body>
+
+<div class="container">
+
+    <style>
+        .form-signin{
+
+        }
+        button{
+            margin: 0 auto;
+        }
+        .strong{
+            line-height: 80px;
+            font-size: 26px;
+            font-weight: 200;
+            padding-left: 26px;
+        }
+        video {
+            border: 1px dashed lightgray;
+            width: 300px;
+            height: 150px;
+        }
+    </style>
+
+    <form class="form-signin">
+        <h2>EXAMPLE JSSIP</h2>
+
+        <div class="row">
+            <div class="col-md-4">
+                <h3>Params</h3>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="fieldName">Name</label>
+                            <input type="text" class="form-control" id="fieldName" value="Participant+1">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="fieldSIP_password">SIP password</label>
+                            <input type="text" class="form-control" id="fieldSIP_password">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="fieldWS_URI">WS URI</label>
+                            <input type="text" class="form-control" id="fieldWS_URI" value="wss://socket-dev.nefrosovet.ru:443">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="col-md-4">
+                <h3>Local Video</h3>
+                <video id="my-video"></video>
+            </div>
+            <div class="col-md-4">
+                <h3>Remote Video</h3>
+                <video id="peer-video"></video>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <label for="fieldSIP_URI_name">SIP URI</label>
+            </div>
+        </div>
+        <div class="row">
+            <fieldset>
+                <div class="col-md-1">
+                    <span class="strong">sip: </span>
+                </div>
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="fieldSIP_URI_name">username</label>
+                        <input type="text" class="form-control" id="fieldSIP_URI_name" placeholder="username">
+                    </div>
+                </div>
+                <div class="col-md-1">
+                    <span class="strong"> @ </span>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="form-group">
+                        <label for="fieldSIP_URI_realm">realm</label>
+                        <input type="text" class="form-control" id="fieldSIP_URI_realm" placeholder="realm" value="socket-dev.nefrosovet.ru">
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="fieldNumber">Number</label>
+                    <input type="text" class="form-control" id="fieldNumber" value="">
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="form-group">
+                    <label for="fieldAddresForMessage">Messages</label>
+                    <input type="text" class="form-control" id="fieldAddresForMessage">
+                </div>
+            </div>
+        </div>
+
+    </form>
+    <br>
+    <div class="row">
+        <div class="col-md-8">
+            <label for="textarea">Логи:</label>
+            <textarea id="textarea" class="form-control" rows="15" disabled></textarea>
+        </div>
+        <div class="col-md-4">
+            <div class="well center-block">
+                <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
+                <button id="btnCall" type="button" class="btn btn-primary btn-block">Call number</button>
+                <button id="btnSendMessage" type="button" class="btn btn-primary btn-block">Send message</button>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="script.js" type="text/javascript"></script>
+</body>
+</html>
