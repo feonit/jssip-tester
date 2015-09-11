@@ -82,12 +82,28 @@ var eventHandlers = {
         }
 
         var configuration = {
-            'ws_servers': GUI.fieldWS_URI.value,
-            'uri': getSIP_URI_my(),
-            'password': GUI.fieldSIP_password.value,
-            'display_name': GUI.field_display_name.value,
-            log: { level: 'debug' }
+            authorization_user: "",
+            connection_recovery_max_interval: 30,
+            connection_recovery_min_interval: 2,
+            display_name: GUI.field_display_name.value,
+            hack_ip_in_contact: false,
+            hack_via_tcp: false,
+            hack_via_ws: false,
+            log: { level: 'debug' },
+            no_answer_timeout: 60,
+            password: GUI.fieldSIP_password.value,
+            register: true,
+            register_expires: 600,
+            registrar_server: "",
+            session_timers: true,
+            uri: getSIP_URI_my(),
+            use_preloaded_route: false,
+            ws_servers: GUI.fieldWS_URI.value
         };
+
+        console.log('configurations for connect: ');
+        console.log(configuration);
+
 
         var coolPhone = new JsSIP.UA(configuration);
 
@@ -143,11 +159,23 @@ var eventHandlers = {
     'onClickBtnCallSip': function(){
         var sip_uri = getSIP_URI_conference();
 
+        var peerconnection_config;
+
         var options = {
+            pcConfig: { "iceServers": [ {"urls": ["stun:stun.l.google.com:19302"]} ], "gatheringTimeout": 2000 },
             'eventHandlers': eventHandlers.sip,
-            'extraHeaders': [ 'X-Foo: foo', 'X-Bar: bar' ],
+            'extraHeaders': [
+                'X-Can-Renegotiate: true'
+            ],
+            rtcOfferConstraints: {
+                offerToReceiveAudio: 1,
+                offerToReceiveVideo: 1
+            },
             'mediaConstraints': {'audio': true, 'video': true}
         };
+
+        console.log('configurations for call: ' + options);
+        console.log(options);
 
         APP.session = APP.coolPhone.call(sip_uri, options);
 
