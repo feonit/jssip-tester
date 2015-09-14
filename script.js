@@ -283,4 +283,19 @@ if(GUI.btnSendMessage){
     GUI.btnSendMessage.addEventListener('click', eventHandlers.onClickBtnbtnSendMessageSip, false );
 }
 
+if(localStorage){
+    document.addEventListener('change', function(event){
+        var target = event.target;
+        var id = target.id;
+        if (id){
+            localStorage.setItem(id, target.value);
+        }
+    });
+}
+
+for(var key in localStorage) {
+    var node = document.getElementById(key);
+    node.value = localStorage[key];
+}
+
 
