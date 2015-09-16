@@ -1,41 +1,310 @@
 
 var APP = {};
-var GUI = {};
 
-APP.session = null;
+var peerconnection_config = { "iceServers": [ {"urls": ["stun:stun.l.google.com:19302"]} ], "gatheringTimeout": 2000 };
 
-GUI.console = {
+var GUI = {
 
-    el: document.querySelector('textarea'),
+    // Active session collection
+    Sessions: [],
 
-    log: function fn(eventName, groupName, error){
-        fn.count || (fn.count = 0);
-        if (typeof eventName !== 'string') throw Error();
-        if (groupName && (typeof groupName !== 'string')) throw Error();
 
-        var arg = arguments;
+    new_call : function(e) {
+    // JsSIP.UA newRTCSession event listener
+        /** @type {JsSIP.RTCSession} */
+        var call = e.session;
 
-        if (arg.length == 1){
-            this.el.innerHTML += '\n' + 'event: ' + eventName;
+        /** @type {JsSIP.NameAddrHeader} */
+        var addr = call.remote_identity;
+
+        /** @type {JsSIP.URI} */
+        var uri = addr.uri;
+
+        /** @type {String} */
+        var display_name = call.remote_identity.display_name || uri.user;
+
+        /** Returns a String representing the AoR of the URI
+         * @type {String}
+         * */
+        var aor = uri.toAor();
+
+        var session = session = GUI.getSession(aor);
+
+        // We already have a session with this peer
+        if (session) {
+            if (session.call && !session.call.isEnded()) {
+                call.terminate();
+                return;
+            } else {
+                session.call = call;
+            }
+
+            // new session
+        } else {
+            session = GUI.createSession(display_name, uri.toAor());
+            session.call = call;
         }
-        if (arg.length == 2){
-            this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']';
 
-        }
-        if (arg.length == 3){
-            this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']' + '\n\t\t (оригинальную ошибку смотри в консоли)';
-             console.error(error);
-        }
+        GUI.setCallEventHandlers(e);
     },
 
-    error: function(text){
-        alert(text);
+    //sounds/incoming-call2.ogg
+    playSound : function _fn(sound_file) {
+        if(!_fn.soundPlayer){
+            _fn.soundPlayer = document.createElement("audio");
+            _fn.soundPlayer.volume = 1;
+        }
 
-        throw Error(text);
+        _fn.soundPlayer.setAttribute("src", sound_file);
+        _fn.soundPlayer.play();
+    },
+
+    /**
+     * @param {String} display_name
+     * @param {String} uri AoR
+     * */
+    createSession: function(display_name, uri) {
+        // Add a session object to the session collection
+        var session,
+            compositionIndicator;
+
+        session = GUI.getSession(uri);
+
+        if (session === null) {
+            // iscomposing stuff.
+            //compositionIndicator = GUI.f(uri);
+            //compositionIndicator.idle();
+
+
+            session = {
+                uri: uri,
+                displayName: display_name,
+                call: null,
+                //compositionIndicator: compositionIndicator,
+                //isComposing: false,
+                //chat: []
+            };
+
+            GUI.Sessions.push(session);
+        }
+
+        return session;
+    },
+
+    /**
+     * Возвращает сохраненную сессию по идентификатору
+     * @param {String} uri AoR
+     * @return {null || session}
+     * */
+    getSession : function(uri) {
+        var idx,
+            session = null;
+
+        for(idx in GUI.Sessions) {
+            if (GUI.Sessions[idx].uri === uri) {
+                session = GUI.Sessions[idx];
+                break;
+            }
+        }
+
+        return session;
+    },
+
+    removeSession: function(uri, force) {
+        // remove a session object from the session collection
+        console.log('Tryit: removeSession');
+        var idx, session;
+
+        for(idx in GUI.Sessions) {
+            session = GUI.Sessions[idx];
+            if (session.uri === uri) {
+
+                // living chat session
+                if (!force && session.chat.length) {
+                    session.call = null;
+                } else {
+                    //session.compositionIndicator.close();
+                    GUI.Sessions.splice(idx,1);
+                }
+            }
+        }
+
+        //GUI.renderSessions();
+    },
+
+    /**
+     * handler
+     * @param {JsSIP.RTCSession} call
+     * */
+    buttonAnswerClick: function(call) {
+        call.answer({
+            pcConfig: peerconnection_config,
+            // TMP:
+            mediaConstraints: {audio: true, video: true},
+            //extraHeaders: [
+            //    'X-Can-Renegotiate: ' + String(localCanRenegotiateRTC())
+            //],
+            rtcOfferConstraints: {
+                offerToReceiveAudio: 1,
+                offerToReceiveVideo: 1
+            }
+        });
+    },
+
+    buttonHangupClick: function(call) {
+        call.terminate();
+    },
+
+    buttonDialClick: function(target) {
+        console.log('Tryit: buttonDialClick');
+
+        GUI.jssipCall(target);
+    },
+
+    /**
+     * @param {String} target — Number of opponent
+     * */
+    jssipCall : function(target) {
+        APP.ua.call(target, {
+            pcConfig: peerconnection_config,
+            mediaConstraints: { audio: true, video: true },
+            extraHeaders: [
+                'X-Can-Renegotiate: true'
+            ],
+            rtcOfferConstraints: {
+                offerToReceiveAudio: 1,
+                offerToReceiveVideo: 1
+            }
+        });
+    },
+
+    setCallEventHandlers : function(e){
+        var request = e.request,
+            call = e.session;
+
+        // check custom X-Can-Renegotiate header field
+        if (call.direction === 'incoming') {
+            if (call.request.getHeader('X-Can-Renegotiate') === 'false') {
+                call.data.remoteCanRenegotiateRTC = false;
+            } else {
+                call.data.remoteCanRenegotiateRTC = true;
+            }
+
+            GUI.playSound("sounds/incoming-call2.ogg");
+
+            // i rendered always 1 session
+            new ComponentControlsBar({
+                data: GUI.Sessions[0]
+            }).initialize();
+        }
+
+        call.on('connecting', function() {
+
+        });
+
+        // Progress
+        call.on('progress',function(e){
+
+        });
+
+        // Started
+        call.on('accepted',function(e){
+
+        });
+
+        call.on('addstream', function(e) {
+
+        });
+
+        // Failed
+        call.on('failed',function(e) {
+            alert('failed')
+        });
+
+        // NewDTMF
+        call.on('newDTMF',function(e) {
+
+        });
+
+        call.on('hold',function(e) {
+
+        });
+
+        call.on('unhold',function(e) {
+
+        });
+
+        // Ended
+        call.on('ended', function(e) {
+
+        });
+
+        // received UPDATE
+        call.on('update', function(e) {
+
+        });
+
+        // received reINVITE
+        call.on('reinvite', function(e) {
+
+        });
+
+        // received REFER
+        call.on('refer', function(e) {
+
+        });
+
+        // received INVITE replacing this session
+        call.on('replaces', function(e) {
+
+        });
+    },
+
+    console : {
+
+        el: document.querySelector('textarea'),
+
+        log: function fn(eventName, groupName, error){
+            fn.count || (fn.count = 0);
+            if (typeof eventName !== 'string') throw Error();
+            if (groupName && (typeof groupName !== 'string')) throw Error();
+
+            var arg = arguments;
+
+            if (arg.length == 1){
+                this.el.innerHTML += '\n' + 'event: ' + eventName;
+            }
+            if (arg.length == 2){
+                this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']';
+
+            }
+            if (arg.length == 3){
+                this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']' + '\n\t\t (оригинальную ошибку смотри в консоли)';
+                console.error(error);
+            }
+        },
+
+        error: function(text){
+            alert(text);
+
+            throw Error(text);
+        }
     }
 };
 
-GUI.console.log('init scripts');
+APP.session = null;
+
+var isCorrectVersion;
+
+if ( JsSIP && (isCorrectVersion = JsSIP.version === '0.7.4') )
+    GUI.console.log(JsSIP.name + ' ' + JsSIP.version);
+else
+    GUI.console.error('Need JsSIP 0.7.4');
+
+// debug
+
+JsSIP.debug.enable('JsSIP:*');
+
 
 function getSIP_URI_my(){
     var sip_uri;
@@ -71,7 +340,7 @@ function getSIP_URI_conference(){
 
 var eventHandlers = {
 
-    'onClickBtnStartSip': function(){
+    onClickBtnStartSip: function(){
 
         if(!GUI.fieldWS_URI.value){
             GUI.console.error('not define "WS URI" ')
@@ -105,49 +374,51 @@ var eventHandlers = {
         console.log(configuration);
 
 
-        var coolPhone = new JsSIP.UA(configuration);
+        var ua = new JsSIP.UA(configuration);
 
-        coolPhone.start();
+        ua.start();
 
-        APP.coolPhone = coolPhone;
+        APP.ua = ua;
 
-        APP.coolPhone.on('connected', function(e){
+        ua.on('connected', function(e){
 
             GUI.console.log('connected', 'WebSocket connection events')
 
         });
 
-        APP.coolPhone.on('disconnected', function(e){
+        ua.on('disconnected', function(e){
 
             GUI.console.log('disconnected', 'WebSocket connection events')
 
         });
 
-        APP.coolPhone.on('newRTCSession', function(e){
-
+        // Call/Message reception callbacks
+        ua.on('newRTCSession', function(e) {
             GUI.console.log('newRTCSession', 'New incoming or outgoing call event')
-
+            // Set a global '_Session' variable with the session for testing.
+            _Session = e.session;
+            GUI.new_call(e);
         });
 
-        APP.coolPhone.on('newMessage', function(e){
+        ua.on('newMessage', function(e){
 
             GUI.console.log('newMessage', 'New incoming or outgoing IM message event')
 
         });
 
-        APP.coolPhone.on('registered', function(e){
+        ua.on('registered', function(e){
 
             GUI.console.log('registered', 'SIP registration events')
 
         });
 
-        APP.coolPhone.on('unregistered', function(e){
+        ua.on('unregistered', function(e){
 
             GUI.console.log('unregistered', 'SIP registration events')
 
         });
 
-        APP.coolPhone.on('registrationFailed', function(e){
+        ua.on('registrationFailed', function(e){
 
             GUI.console.log('registrationFailed', 'SIP registration events')
         });
@@ -156,13 +427,11 @@ var eventHandlers = {
 
     },
 
-    'onClickBtnCallSip': function(){
+    onClickBtnCallSip: function(){
         var sip_uri = getSIP_URI_conference();
 
-        var peerconnection_config;
-
         var options = {
-            pcConfig: { "iceServers": [ {"urls": ["stun:stun.l.google.com:19302"]} ], "gatheringTimeout": 2000 },
+            pcConfig: peerconnection_config,
             'eventHandlers': eventHandlers.sip,
             'extraHeaders': [
                 'X-Can-Renegotiate: true'
@@ -177,41 +446,9 @@ var eventHandlers = {
         console.log('configurations for call: ' + options);
         console.log(options);
 
-        APP.session = APP.coolPhone.call(sip_uri, options);
+        APP.session = APP.ua.call(sip_uri, options);
 
         GUI.console.log('click', 'Starting the User Agent')
-    },
-
-    'onClickBtnbtnSendMessageSip': function(){
-        var text = 'Hello Bob!';
-
-        // Register callbacks to desired message events
-        var eventHandlers = {
-            'succeeded': function(e){
-
-                GUI.console.log('succeeded', 'Instant messaging')
-
-            },
-            'failed':    function(e){
-
-                GUI.console.log('failed', 'Instant messaging', e)
-
-            }
-        };
-
-        var options = {
-            'eventHandlers': eventHandlers
-        };
-
-        var sip_uri = GUI.fieldAddresForMessage.value;
-
-        if(!sip_uri){
-            GUI.console.error('not define "Message text" ')
-        }
-
-        APP.coolPhone.sendMessage(sip_uri, text, options);
-
-        GUI.console.log('message \'Hello Bob!\' was send', 'Instant messaging')
     },
 
     sip: {
@@ -250,12 +487,102 @@ var eventHandlers = {
 };
 
 
+var ComponentControlsBar = (function(){
+
+    function ComponentControlsBar(props){
+        this.callStatus = 'incoming';
+        this.call = props.data.call;
+        this.uri = props.data.uri;
+        this.displayName = props.data.displayName;
+
+        var templateScriptNodeElement = document.getElementById('component-controls-bar');
+
+        if (!templateScriptNodeElement) throw 'not found template';
+
+        var wrapper = document.createElement('div');
+        wrapper.innerHTML = templateScriptNodeElement.textContent;
+
+        var up;
+        var down;
+        var handler1;
+        var handler2;
+
+        this.initialize = function(){
+            // bind handlers
+            up = wrapper.getElementsByClassName('js-btnPhoneUp')[0];
+            down = wrapper.getElementsByClassName('js-btnPhoneDown')[0];
+            handler1 = this.onClickBtnDial.bind(this);
+            handler2 = this.onClickBtnHangup.bind(this);
+            up.addEventListener('click', handler1, false);
+            down.addEventListener('click', handler2, false);
+
+            // view html
+            this._render();
+        };
+
+        this._render = function(){
+            var parentNode = templateScriptNodeElement.parentNode;
+
+            // wrap with comments
+            parentNode.insertBefore(document.createComment(this.constructor.name), templateScriptNodeElement);
+            parentNode.insertBefore(document.createComment('/'+this.constructor.name), templateScriptNodeElement.nextElementSibling);
+
+            // to array
+            var children = [].slice.call(wrapper.children);
+
+            // insert component
+            [].forEach.call(children, function(elem){
+                parentNode.insertBefore(elem, templateScriptNodeElement);
+            });
+
+            // remove template node
+            parentNode.removeChild(templateScriptNodeElement);
+        };
+
+        this.destroy = function(){
+            up.removeEventListener('click', handler1);
+            down.removeEventListener('click', handler2);
+        };
+
+        return {
+            initialize: this.initialize.bind(this),
+            destroy: this.destroy.bind(this)
+        }
+    }
+
+    ComponentControlsBar.prototype = {
+        constructor: ComponentControlsBar,
+        /**
+         * @this {ComponentControlsBar}
+         * @param {MouseEvent} event
+         * */
+        onClickBtnDial: function(event){
+            if (this.callStatus === 'incoming'){
+                GUI.buttonAnswerClick(this.call)
+            } else {
+                GUI.buttonDialClick(this.uri)
+            }
+        },
+        /**
+         * @this {ComponentControlsBar}
+         * @param {MouseEvent} event
+         * */
+        onClickBtnHangup: function(event){
+            GUI.buttonHangupClick(this.call)
+        }
+    };
+
+    return ComponentControlsBar;
+}());
+
+
 var dg = document.getElementById.bind(document);
 
 // buttons
 GUI.btnStart = dg('btnStart');
 GUI.btnCall = dg('btnCall');
-GUI.btnSendMessage = dg('btnSendMessage');
+GUI.btnPhoneUp = dg('btnPhoneUp');
+GUI.btnPhoneDown = dg('btnPhoneDown');
 
 // inputs
 GUI.fieldName = dg('fieldName');
@@ -263,7 +590,6 @@ GUI.fieldWS_URI = dg('fieldWS_URI');
 GUI.fieldSIP_URI_name = dg('fieldSIP_URI_name');
 GUI.fieldSIP_URI_realm = dg('fieldSIP_URI_realm');
 GUI.fieldSIP_password = dg('fieldSIP_password');
-GUI.fieldAddresForMessage = dg('fieldAddresForMessage');
 GUI.fieldNumber = dg('fieldNumber');
 GUI.field_display_name = dg('field_display_name');
 
@@ -279,23 +605,56 @@ if(GUI.btnStart){
 if(GUI.btnCall){
     GUI.btnCall.addEventListener('click', eventHandlers.onClickBtnCallSip, false );
 }
-if(GUI.btnSendMessage){
-    GUI.btnSendMessage.addEventListener('click', eventHandlers.onClickBtnbtnSendMessageSip, false );
+if(GUI.btnPhoneUp){
+    GUI.btnPhoneUp.addEventListener('click', eventHandlers.onClickBtnDial, false );
+}
+if(GUI.btnPhoneDown){
+    GUI.btnPhoneDown.addEventListener('click', eventHandlers.onClickBtnHangup, false );
 }
 
 if(localStorage){
+
+    var store = {
+        namespace: 'my_test',
+
+        setData: function(obj){
+            localStorage.setItem(this.namespace, JSON.stringify(obj));
+        },
+        getData: function(){
+            try{
+                return JSON.parse(localStorage.getItem(this.namespace));
+            } catch (e){
+                localStorage.clear();
+                throw 'json was invalid'
+            }
+        }
+    };
+
+    if(!store.getData()){
+        store.setData({});
+    }
+
     document.addEventListener('change', function(event){
         var target = event.target;
         var id = target.id;
         if (id){
-            localStorage.setItem(id, target.value);
+            var data = store.getData();
+            data[id] = target.value;
+            store.setData(data);
         }
     });
+
+    var data = store.getData();
+    var key;
+
+    if(data){
+        for(key in data) {
+            var node = document.getElementById(key);
+            node.value = data[key];
+        }
+    }
 }
 
-for(var key in localStorage) {
-    var node = document.getElementById(key);
-    node.value = localStorage[key];
-}
+
 
 

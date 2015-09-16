@@ -12,7 +12,7 @@
 
     <style>
         .form-signin{
-
+            //font-family: 'Glyphicons Halflings';
         }
         button{
             margin: 0 auto;
@@ -27,6 +27,7 @@
             border: 1px dashed lightgray;
             width: 300px;
             height: 150px;
+
         }
     </style>
 
@@ -106,6 +107,14 @@
                         <div class="well center-block">
                             <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
                             <button id="btnCall" type="button" class="btn btn-primary btn-block">Call number</button>
+
+                            <script id="component-controls-bar" type="text/html">
+
+                                <button type="button" class="btn btn-primary btn-block js-btnPhoneUp">Phone Up</button>
+                                <button type="button" class="btn btn-primary btn-block js-btnPhoneDown">Phone Down</button>
+
+                            </script>
+
                         </div>
                     </div>
                 </div>
@@ -119,9 +128,6 @@
                 <video autoplay id="peer-video"></video>
             </div>
         </div>
-
-
-
     </form>
     <br>
 
