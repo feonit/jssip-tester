@@ -107,14 +107,22 @@
                         <div class="well center-block">
                             <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
                             <button id="btnCall" type="button" class="btn btn-primary btn-block">Call number</button>
+                        </div>
+                    </div>
+                </div>
 
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="well center-block">
+                            Тут появятся кнопки после звонка
                             <script id="component-controls-bar" type="text/html">
-
-                                <button type="button" class="btn btn-primary btn-block js-btnPhoneUp">Phone Up</button>
-                                <button type="button" class="btn btn-primary btn-block js-btnPhoneDown">Phone Down</button>
-
+                                <button type="button" class="btn btn-primary btn-block js-btnPhoneUp">
+                                    <img src="images/icon-dial.png">
+                                </button>
+                                <button type="button" class="btn btn-primary btn-block js-btnPhoneDown">
+                                    <img src="images/icon-hangup.png">
+                                </button>
                             </script>
-
                         </div>
                     </div>
                 </div>
@@ -139,6 +147,9 @@
     </div>
 
 </div>
-<script src="script.js" type="text/javascript"></script>
+<script src="js/utils.js" type="text/javascript"></script>
+<script src="js/view.js" type="text/javascript"></script>
+<script src="js/script.js" type="text/javascript"></script>
+<script src="js/SessionComponent.js" type="text/javascript"></script>
 </body>
 </html>

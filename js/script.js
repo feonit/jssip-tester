@@ -3,6 +3,9 @@ var APP = {};
 
 var peerconnection_config = { "iceServers": [ {"urls": ["stun:stun.l.google.com:19302"]} ], "gatheringTimeout": 2000 };
 
+var localStream, remoteStream;
+
+
 var GUI = {
 
     // Active session collection
@@ -137,6 +140,8 @@ var GUI = {
      * @param {JsSIP.RTCSession} call
      * */
     buttonAnswerClick: function(call) {
+        if (!call) return;
+
         call.answer({
             pcConfig: peerconnection_config,
             // TMP:
@@ -152,7 +157,9 @@ var GUI = {
     },
 
     buttonHangupClick: function(call) {
-        call.terminate();
+        if (call){
+            call.terminate();
+        }
     },
 
     buttonDialClick: function(target) {
@@ -193,71 +200,46 @@ var GUI = {
             GUI.playSound("sounds/incoming-call2.ogg");
 
             // i rendered always 1 session
-            new ComponentControlsBar({
+            new SessionComponent({
                 data: GUI.Sessions[0]
-            }).initialize();
+            });
         }
-
-        call.on('connecting', function() {
-
-        });
-
-        // Progress
-        call.on('progress',function(e){
-
-        });
-
-        // Started
-        call.on('accepted',function(e){
-
-        });
-
-        call.on('addstream', function(e) {
-
-        });
-
         // Failed
         call.on('failed',function(e) {
             alert('failed')
         });
 
+        call.on('connecting', function() {});
+
+        // Progress
+        call.on('progress',function(e){});
+
+        // Started
+        call.on('accepted',function(e){});
+
+        call.on('addstream', function(e) {});
+
         // NewDTMF
-        call.on('newDTMF',function(e) {
+        call.on('newDTMF',function(e) {});
 
-        });
+        call.on('hold',function(e) {});
 
-        call.on('hold',function(e) {
-
-        });
-
-        call.on('unhold',function(e) {
-
-        });
+        call.on('unhold',function(e) {});
 
         // Ended
-        call.on('ended', function(e) {
-
-        });
+        call.on('ended', function(e) {});
 
         // received UPDATE
-        call.on('update', function(e) {
-
-        });
+        call.on('update', function(e) {});
 
         // received reINVITE
-        call.on('reinvite', function(e) {
-
-        });
+        call.on('reinvite', function(e) {});
 
         // received REFER
-        call.on('refer', function(e) {
-
-        });
+        call.on('refer', function(e) {});
 
         // received INVITE replacing this session
-        call.on('replaces', function(e) {
-
-        });
+        call.on('replaces', function(e) {});
     },
 
     console : {
@@ -487,93 +469,6 @@ var eventHandlers = {
 };
 
 
-var ComponentControlsBar = (function(){
-
-    function ComponentControlsBar(props){
-        this.callStatus = 'incoming';
-        this.call = props.data.call;
-        this.uri = props.data.uri;
-        this.displayName = props.data.displayName;
-
-        var templateScriptNodeElement = document.getElementById('component-controls-bar');
-
-        if (!templateScriptNodeElement) throw 'not found template';
-
-        var wrapper = document.createElement('div');
-        wrapper.innerHTML = templateScriptNodeElement.textContent;
-
-        var up;
-        var down;
-        var handler1;
-        var handler2;
-
-        this.initialize = function(){
-            // bind handlers
-            up = wrapper.getElementsByClassName('js-btnPhoneUp')[0];
-            down = wrapper.getElementsByClassName('js-btnPhoneDown')[0];
-            handler1 = this.onClickBtnDial.bind(this);
-            handler2 = this.onClickBtnHangup.bind(this);
-            up.addEventListener('click', handler1, false);
-            down.addEventListener('click', handler2, false);
-
-            // view html
-            this._render();
-        };
-
-        this._render = function(){
-            var parentNode = templateScriptNodeElement.parentNode;
-
-            // wrap with comments
-            parentNode.insertBefore(document.createComment(this.constructor.name), templateScriptNodeElement);
-            parentNode.insertBefore(document.createComment('/'+this.constructor.name), templateScriptNodeElement.nextElementSibling);
-
-            // to array
-            var children = [].slice.call(wrapper.children);
-
-            // insert component
-            [].forEach.call(children, function(elem){
-                parentNode.insertBefore(elem, templateScriptNodeElement);
-            });
-
-            // remove template node
-            parentNode.removeChild(templateScriptNodeElement);
-        };
-
-        this.destroy = function(){
-            up.removeEventListener('click', handler1);
-            down.removeEventListener('click', handler2);
-        };
-
-        return {
-            initialize: this.initialize.bind(this),
-            destroy: this.destroy.bind(this)
-        }
-    }
-
-    ComponentControlsBar.prototype = {
-        constructor: ComponentControlsBar,
-        /**
-         * @this {ComponentControlsBar}
-         * @param {MouseEvent} event
-         * */
-        onClickBtnDial: function(event){
-            if (this.callStatus === 'incoming'){
-                GUI.buttonAnswerClick(this.call)
-            } else {
-                GUI.buttonDialClick(this.uri)
-            }
-        },
-        /**
-         * @this {ComponentControlsBar}
-         * @param {MouseEvent} event
-         * */
-        onClickBtnHangup: function(event){
-            GUI.buttonHangupClick(this.call)
-        }
-    };
-
-    return ComponentControlsBar;
-}());
 
 
 var dg = document.getElementById.bind(document);
@@ -605,12 +500,7 @@ if(GUI.btnStart){
 if(GUI.btnCall){
     GUI.btnCall.addEventListener('click', eventHandlers.onClickBtnCallSip, false );
 }
-if(GUI.btnPhoneUp){
-    GUI.btnPhoneUp.addEventListener('click', eventHandlers.onClickBtnDial, false );
-}
-if(GUI.btnPhoneDown){
-    GUI.btnPhoneDown.addEventListener('click', eventHandlers.onClickBtnHangup, false );
-}
+
 
 if(localStorage){
 
