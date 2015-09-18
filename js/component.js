@@ -2,73 +2,44 @@
  * Created by Feonit on 17.09.15.
  */
 
-VIEW = {};
+Component = {};
 
-VIEW.extend = function(attributes){
-    var wrapper = document.createElement('div');
-    var isRendered = false;
-    var children;
-    var templateScriptNodeElement = document.getElementById(attributes.template);
-
-    if(!attributes.template) throw 'need template';
+Component.extend = function(attributes){
+    if(!attributes.rootElement) throw 'need rootElement';
     if(!attributes.constructor) throw 'need constructor';
-    if (!templateScriptNodeElement) throw 'not found template';
+    if(!attributes.tmpl) throw 'need tmpl';
 
     function afterChange(){
         console.log('render');
 
-        var parentNode = templateScriptNodeElement.parentNode;
+        var root = attributes.rootElement.createShadowRoot();
+        var clone = attributes.tmpl.content.cloneNode(true);
 
-        // remove template node
-        if (isRendered){
-            // todo отвязку хендлеров
-            [].forEach.call(children, function(elem){
-                parentNode.removeChild(elem);
-            });
-
-        } else {
-
-            // wrap with comments
-            parentNode.insertBefore(document.createComment(attributes.constructor.name), templateScriptNodeElement);
-            parentNode.insertBefore(document.createComment('/'+attributes.constructor.name), templateScriptNodeElement.nextElementSibling);
-
-            isRendered = true;
-        }
-
-        wrapper.innerHTML = templateScriptNodeElement.textContent;
-
-        // to array
-        children = [].slice.call(wrapper.children);
+        root.appendChild(clone);
 
         if (attributes.events){
-            VIEW._bindEvents(this, attributes.events, wrapper)
+            Component._bindEvents(this, attributes.events, attributes.rootElement)
         }
-
-        // insert component тут врапер опустел
-        [].forEach.call(children, function(elem){
-            parentNode.insertBefore(elem, templateScriptNodeElement);
-        });
     }
 
-    function surrogateComponent(){
+    function SurrogateComponent(){
         attributes.constructor.apply(this, arguments);
         // переписать все свойства на сеттеры и гетеры
-        VIEW._setProperties({
+        Component._setProperties({
             instance: this,
-            props: VIEW._clone(this),
+            props: Component._clone(this),
             afterChange: afterChange
         });
 
         afterChange.call(this, arguments);
     }
 
-    // todo mix proto
-    surrogateComponent.prototype = attributes.constructor.prototype;
+    SurrogateComponent.prototype = attributes.constructor.prototype;// todo mix proto
 
-    return surrogateComponent;
+    return SurrogateComponent;
 };
 
-VIEW._setProperties = function (options){
+Component._setProperties = function (options){
     var instance = options.instance;
     var properties = options.props || {};
 
@@ -85,7 +56,7 @@ VIEW._setProperties = function (options){
 
             // доделать подобъекты
             if (typeOf !== 'object'){
-                VIEW._defineProperty(key, options);
+                Component._defineProperty(key, options);
             } else {
                 // try if this is a object or function
                 //setProperties(this.)
@@ -95,7 +66,7 @@ VIEW._setProperties = function (options){
     }
 };
 
-VIEW._clone = function(source){
+Component._clone = function(source){
     var clone = {};
 
     for (var key in source){
@@ -111,7 +82,7 @@ VIEW._clone = function(source){
     return clone;
 };
 
-VIEW._defineProperty = function (key, options){
+Component._defineProperty = function (key, options){
     var instance = options.instance;
     var props = options.props;
     var afterChange = options.afterChange;
@@ -129,7 +100,7 @@ VIEW._defineProperty = function (key, options){
     });
 };
 
-VIEW._bindEvents = function (instance, events, wrapper){
+Component._bindEvents = function (instance, events, wrapper){
     for (var key in events){
         var split = key.split(' ');
 
@@ -140,7 +111,7 @@ VIEW._bindEvents = function (instance, events, wrapper){
         var eventSelector = split[1];
         var handler = instance[events[key]];
 
-        var elem = wrapper.querySelector(eventSelector);
+        var elem = wrapper.shadowRoot.querySelector(eventSelector);
         elem.addEventListener(eventName, handler.bind(instance), false);
     }
 };

@@ -200,7 +200,8 @@ var GUI = {
             GUI.playSound("sounds/incoming-call2.ogg");
 
             // i rendered always 1 session
-            new SessionComponent({
+
+            sessionComponent.setState({
                 data: GUI.Sessions[0]
             });
         }
@@ -209,15 +210,49 @@ var GUI = {
             alert('failed')
         });
 
-        call.on('connecting', function() {});
+        call.on('connecting', function() {
+            if (call.connection.getLocalStreams().length > 0) {
+                window.localStream = call.connection.getLocalStreams()[0];
+            }
+        });
 
         // Progress
         call.on('progress',function(e){});
 
         // Started
-        call.on('accepted',function(e){});
+        call.on('accepted',function(e){
+            //Attach the streams to the views if it exists.
+            if (call.connection.getLocalStreams().length > 0) {
+                localStream = call.connection.getLocalStreams()[0];
 
-        call.on('addstream', function(e) {});
+                GUI.selfView.src = window.URL.createObjectURL(localStream);
+
+                //selfView = JsSIP.rtcninja.attachMediaStream(selfView, localStream);
+
+                GUI.selfView.volume = 0;
+
+                // TMP
+                window.localStream = localStream;
+            }
+
+            if (e.originator === 'remote') {
+                if (e.response.getHeader('X-Can-Renegotiate') === 'false') {
+                    call.data.remoteCanRenegotiateRTC = false;
+                }
+                else {
+                    call.data.remoteCanRenegotiateRTC = true;
+                }
+            }
+        });
+
+        call.on('addstream', function(e) {
+            remoteStream = e.stream;
+
+            // Attach remote stream to remoteView
+            GUI.remoteView.src = window.URL.createObjectURL(remoteStream);
+
+            //remoteView = JsSIP.rtcninja.attachMediaStream(GUI.remoteView, remoteStream);
+        });
 
         // NewDTMF
         call.on('newDTMF',function(e) {});
