@@ -2,8 +2,8 @@
  * Created by Feonit on 18.09.15.
  */
 
-var ComponentViewModel = window.UTILS.defineSubclass(function base(){},
-    function ComponentViewModel(props){
+var SessionBar = window.UTILS.defineSubclass(function base(){},
+    function SessionBar(props){
         /** @enum {String} */
         var _TYPES = {
             TYPE_A: 1,
@@ -16,11 +16,6 @@ var ComponentViewModel = window.UTILS.defineSubclass(function base(){},
         this.uri = 'not uri is here';
         this.displayName = 'not display name is here';
 
-        if (props){
-            this.setState(props)
-        }
-
-        this.isHidden = false;
 
         // todo установку параметров с одним рендером вместо нескольких
         this.setState = function(props){
@@ -28,9 +23,15 @@ var ComponentViewModel = window.UTILS.defineSubclass(function base(){},
             this.uri = props.data.uri;
             this.displayName = props.data.displayName;
         }
+
+        if (props){
+            this.setState(props)
+        }
+
+        this.isHidden = false;
     },
     {
-        constructor: ComponentViewModel,
+        constructor: SessionBar,
         /**
          * @this {SessionComponent}
          * @param {MouseEvent} event
@@ -80,35 +81,20 @@ var ComponentViewModel = window.UTILS.defineSubclass(function base(){},
 );
 
 
+Component.register({
 
+    // даем имя компоненту
+    elementTagName: 'session-bar',
 
-// todo добавить прототип window.SessionComponent
-// (1) получить шаблон
-var localDocument = document.currentScript.ownerDocument;
-var tmpl = localDocument.getElementById('session-bar-template');
+    // контекст его определения
+    ownerDocument: document.currentScript.ownerDocument,
 
-// (2) создать элемент
-var SessionBarProto = Object.create(HTMLElement.prototype);
+    // определяет внутреннее состояние
+    constructor: SessionBar,
 
-
-SessionBarProto.createdCallback = function() {
-    /** @type {HTMLElement}*/
-    var savedElement = this;
-
-    var SessionComponent = Component.extend({
-        tmpl: tmpl,
-        rootElement: savedElement,
-        events: {
-            'click .js-btnPhoneUp': 'onClickBtnDial',
-            'click .js-btnPhoneDown': 'onClickBtnHangup'
-        },
-        constructor: ComponentViewModel
-    });
-
-    window.sessionComponent = new SessionComponent();
-};
-
-// (3) зарегистрировать в DOM
-document.registerElement('session-bar', {
-    prototype: SessionBarProto
+    // обработчики внутренного состояния
+    events: {
+        'click .js-btnPhoneUp': 'onClickBtnDial',
+        'click .js-btnPhoneDown': 'onClickBtnHangup'
+    }
 });

@@ -6,144 +6,27 @@
     <script src="libs/jssip.js" type="text/javascript"></script>
     <link rel="stylesheet" type="text/css" href="libs/bootstrap.css">
 
-    <link rel="import" id="link" href="js/components/session-bar.html">
+    <script src="js/utils.js" type="text/javascript"></script>
+    <script src="js/component.js" type="text/javascript"></script>
+
+    <link rel="import" href="components/session-bar/session-bar.html">
+    <link rel="import" href="components/data-area/data-area.html">
+    <link rel="import" href="components/agent-bar/agent-bar.html">
+    <link rel="import" href="components/video-area/video-area.html">
+    <link rel="import" href="components/log-area/log-area.html">
 
 </head>
 <body>
 
 <div class="container">
-
-    <style>
-        .form-signin{
-            //font-family: 'Glyphicons Halflings';
-        }
-        button{
-            margin: 0 auto;
-        }
-        .strong{
-            line-height: 80px;
-            font-size: 26px;
-            font-weight: 200;
-            padding-left: 26px;
-        }
-        video {
-            border: 1px dashed lightgray;
-            width: 300px;
-            height: 150px;
-
-        }
-    </style>
-
-    <form class="form-signin">
-        <h2>EXAMPLE JSSIP</h2>
-
-        <div class="row">
-            <div class="col-md-4">
-                <h3>Params</h3>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="fieldName">Name</label>
-                            <input type="text" class="form-control" id="fieldName" value="Participant+1">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="fieldWS_URI">WS URI</label>
-                            <input type="text" class="form-control" id="fieldWS_URI" value="wss://socket-dev.nefrosovet.ru:443">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="fieldSIP_URI_realm">Realm</label>
-                            <input type="text" class="form-control" id="fieldSIP_URI_realm" placeholder="" value="socket-dev.nefrosovet.ru">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="field_display_name">Display name</label>
-                            <input type="text" class="form-control" id="field_display_name" placeholder="" value="test name">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="fieldSIP_password">SIP password</label>
-                            <input type="text" class="form-control" id="fieldSIP_password">
-                        </div>
-                    </div>
-                </div>
-
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="fieldSIP_URI_name">Username</label>
-                            <input type="text" class="form-control" id="fieldSIP_URI_name" placeholder="">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="form-group">
-                            <label for="fieldNumber">Number</label>
-                            <input type="text" class="form-control" id="fieldNumber" value="">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="well center-block">
-                            <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
-                            <button id="btnCall" type="button" class="btn btn-primary btn-block">Call number</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-12">
-                        <div class="well center-block">
-                            <session-bar id="sessionComponent"></session-bar>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-            <div class="col-md-4">
-                <h3>Local Video</h3>
-                <video autoplay id="my-video"></video>
-
-                <h3>Remote Video</h3>
-                <video autoplay id="peer-video"></video>
-            </div>
-        </div>
-    </form>
-    <br>
-
-    <div class="row">
-        <div class="col-md-8">
-            <label for="textarea">Log:</label>
-            <textarea id="textarea" class="form-control" rows="15" disabled></textarea>
-        </div>
-    </div>
-
+    <data-area id="dataAreaExample"></data-area>
+    <agent-bar id="agentBarExample"></agent-bar>
+    <session-bar id="sessionBarExample"></session-bar>
+    <video-area id="videoAreaExample"></video-area>
+    <log-area id="logAreaExample"></log-area>
 </div>
-<script src="js/utils.js" type="text/javascript"></script>
-<script src="js/component.js" type="text/javascript"></script>
+
 <script src="js/script.js" type="text/javascript"></script>
+
 </body>
 </html>

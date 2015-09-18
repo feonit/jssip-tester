@@ -275,96 +275,26 @@ var GUI = {
 
         // received INVITE replacing this session
         call.on('replaces', function(e) {});
-    },
-
-    console : {
-
-        el: document.querySelector('textarea'),
-
-        log: function fn(eventName, groupName, error){
-            fn.count || (fn.count = 0);
-            if (typeof eventName !== 'string') throw Error();
-            if (groupName && (typeof groupName !== 'string')) throw Error();
-
-            var arg = arguments;
-
-            if (arg.length == 1){
-                this.el.innerHTML += '\n' + 'event: ' + eventName;
-            }
-            if (arg.length == 2){
-                this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']';
-
-            }
-            if (arg.length == 3){
-                this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']' + '\n\t\t (оригинальную ошибку смотри в консоли)';
-                console.error(error);
-            }
-        },
-
-        error: function(text){
-            alert(text);
-
-            throw Error(text);
-        }
     }
 };
 
 APP.session = null;
-
-var isCorrectVersion;
-
-if ( JsSIP && (isCorrectVersion = JsSIP.version === '0.7.4') )
-    GUI.console.log(JsSIP.name + ' ' + JsSIP.version);
-else
-    GUI.console.error('Need JsSIP 0.7.4');
 
 // debug
 
 JsSIP.debug.enable('JsSIP:*');
 
 
-function getSIP_URI_my(){
-    var sip_uri;
-
-    if(!GUI.fieldSIP_URI_name.value){
-        GUI.console.error('not define "SIP URI name" ')
-    }
-
-    if(!GUI.fieldSIP_URI_realm.value){
-        GUI.console.error('not define "SIP URI realm" ')
-    }
-
-    sip_uri = 'sip:' + GUI.fieldSIP_URI_name.value + '@' + GUI.fieldSIP_URI_realm.value;
-
-    return sip_uri;
-}
-
-function getSIP_URI_conference(){
-    var sip_uri;
-
-    if(!GUI.fieldNumber.value){
-        GUI.console.error('not define "SIP URI number" ')
-    }
-
-    if(!GUI.fieldSIP_URI_realm.value){
-        GUI.console.error('not define "SIP URI realm" ')
-    }
-
-    sip_uri = 'sip:' + GUI.fieldNumber.value + '@' + GUI.fieldSIP_URI_realm.value;
-
-    return sip_uri;
-}
-
 var eventHandlers = {
 
     onClickBtnStartSip: function(){
 
         if(!GUI.fieldWS_URI.value){
-            GUI.console.error('not define "WS URI" ')
+            window.logAreaExample.log.error('not define "WS URI" ')
         }
 
         if(!GUI.fieldSIP_password.value){
-            GUI.console.error('not define "PASSWORD" ')
+            window.logAreaExample.log.error('not define "PASSWORD" ')
         }
 
         var configuration = {
@@ -399,19 +329,19 @@ var eventHandlers = {
 
         ua.on('connected', function(e){
 
-            GUI.console.log('connected', 'WebSocket connection events')
+            window.logAreaExample.log.log('connected', 'WebSocket connection events')
 
         });
 
         ua.on('disconnected', function(e){
 
-            GUI.console.log('disconnected', 'WebSocket connection events')
+            window.logAreaExample.log.log('disconnected', 'WebSocket connection events')
 
         });
 
         // Call/Message reception callbacks
         ua.on('newRTCSession', function(e) {
-            GUI.console.log('newRTCSession', 'New incoming or outgoing call event')
+            window.logAreaExample.log.log('newRTCSession', 'New incoming or outgoing call event')
             // Set a global '_Session' variable with the session for testing.
             _Session = e.session;
             GUI.new_call(e);
@@ -419,28 +349,28 @@ var eventHandlers = {
 
         ua.on('newMessage', function(e){
 
-            GUI.console.log('newMessage', 'New incoming or outgoing IM message event')
+            window.logAreaExample.log.log('newMessage', 'New incoming or outgoing IM message event')
 
         });
 
         ua.on('registered', function(e){
 
-            GUI.console.log('registered', 'SIP registration events')
+            window.logAreaExample.log.log('registered', 'SIP registration events')
 
         });
 
         ua.on('unregistered', function(e){
 
-            GUI.console.log('unregistered', 'SIP registration events')
+            window.logAreaExample.log.log('unregistered', 'SIP registration events')
 
         });
 
         ua.on('registrationFailed', function(e){
 
-            GUI.console.log('registrationFailed', 'SIP registration events')
+            window.logAreaExample.log.log('registrationFailed', 'SIP registration events')
         });
 
-        GUI.console.log('click', 'Starting the User Agent')
+        window.logAreaExample.log.log('click', 'Starting the User Agent')
 
     },
 
@@ -465,25 +395,25 @@ var eventHandlers = {
 
         APP.session = APP.ua.call(sip_uri, options);
 
-        GUI.console.log('click', 'Starting the User Agent')
+        window.logAreaExample.log.log('click', 'Starting the User Agent')
     },
 
     sip: {
         'progress':   function(e){
 
-            GUI.console.log('progress', 'Making outbound calls')
+            window.logAreaExample.log.log('progress', 'Making outbound calls')
 
         },
         'failed':     function(e){
 
-            GUI.console.log('failed', 'Making outbound calls', e)
+            window.logAreaExample.log.log('failed', 'Making outbound calls', e)
 
         },
         'confirmed':  function(e){
             // Attach local stream to selfView
             GUI.selfView.src = window.URL.createObjectURL(APP.session.connection.getLocalStreams()[0]);
 
-            GUI.console.log('confirmed', 'Making outbound calls')
+            window.logAreaExample.log.log('confirmed', 'Making outbound calls')
 
         },
         'addstream':  function(e) {
@@ -492,12 +422,12 @@ var eventHandlers = {
             // Attach remote stream to remoteView
             GUI.remoteView.src = window.URL.createObjectURL(stream);
 
-            GUI.console.log('addstream', 'Making outbound calls')
+            window.logAreaExample.log.log('addstream', 'Making outbound calls')
 
         },
         'ended':      function(e){
 
-            GUI.console.log('ended', 'Making outbound calls')
+            window.logAreaExample.log.log('ended', 'Making outbound calls')
 
         }
     }
@@ -511,17 +441,7 @@ var dg = document.getElementById.bind(document);
 // buttons
 GUI.btnStart = dg('btnStart');
 GUI.btnCall = dg('btnCall');
-GUI.btnPhoneUp = dg('btnPhoneUp');
-GUI.btnPhoneDown = dg('btnPhoneDown');
 
-// inputs
-GUI.fieldName = dg('fieldName');
-GUI.fieldWS_URI = dg('fieldWS_URI');
-GUI.fieldSIP_URI_name = dg('fieldSIP_URI_name');
-GUI.fieldSIP_URI_realm = dg('fieldSIP_URI_realm');
-GUI.fieldSIP_password = dg('fieldSIP_password');
-GUI.fieldNumber = dg('fieldNumber');
-GUI.field_display_name = dg('field_display_name');
 
 // videos
 GUI.selfView =   dg('my-video');
@@ -537,48 +457,6 @@ if(GUI.btnCall){
 }
 
 
-if(localStorage){
-
-    var store = {
-        namespace: 'my_test',
-
-        setData: function(obj){
-            localStorage.setItem(this.namespace, JSON.stringify(obj));
-        },
-        getData: function(){
-            try{
-                return JSON.parse(localStorage.getItem(this.namespace));
-            } catch (e){
-                localStorage.clear();
-                throw 'json was invalid'
-            }
-        }
-    };
-
-    if(!store.getData()){
-        store.setData({});
-    }
-
-    document.addEventListener('change', function(event){
-        var target = event.target;
-        var id = target.id;
-        if (id){
-            var data = store.getData();
-            data[id] = target.value;
-            store.setData(data);
-        }
-    });
-
-    var data = store.getData();
-    var key;
-
-    if(data){
-        for(key in data) {
-            var node = document.getElementById(key);
-            node.value = data[key];
-        }
-    }
-}
 
 
 
