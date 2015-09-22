@@ -4,17 +4,10 @@
 
 (function(){
 
-    function Сonstructor(props, instance){
-        this.some = 'some';
-        this.el = instance;
-
+    function Сonstructor(props){
+        this.textLog = '...';
 
         var isCorrectVersion;
-
-        if ( JsSIP && (isCorrectVersion = JsSIP.version === '0.7.4') )
-            this.log(JsSIP.name + ' ' + JsSIP.version);
-        else
-            this.log.error('Need JsSIP 0.7.4');
     }
 
     Сonstructor.prototype.log = function fn(eventName, groupName, error){
@@ -25,14 +18,14 @@
         var arg = arguments;
 
         if (arg.length == 1){
-            this.el.innerHTML += '\n' + 'event: ' + eventName;
+            this.textLog += '\n' + 'event: ' + eventName;
         }
         if (arg.length == 2){
-            this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']';
+            this.textLog += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']';
 
         }
         if (arg.length == 3){
-            this.el.innerHTML += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']' + '\n\t\t (оригинальную ошибку смотри в консоли)';
+            this.textLog += '\n' + 'event: ' +  eventName  + '\t[' + groupName + ']' + '\n\t\t (оригинальную ошибку смотри в консоли)';
             console.error(error);
         }
     };
@@ -47,14 +40,21 @@
         // даем имя компоненту
         elementTagName: 'log-area',
 
-        // контекст его определения
-        ownerDocument: document.currentScript.ownerDocument,
-
         // определяет внутреннее состояние
         constructor: Сonstructor,
 
         // обработчики внутренного состояния
-        events: {}
+        events: {},
+
+        template: function(){
+            with(this){
+                return `
+                    <label for="textarea">Log:</label>
+                    <br>
+                    <textarea value="${textLog}" id="textarea" class="form-control" rows="15" disabled></textarea>
+                `
+            }
+        }
     });
 
 })();

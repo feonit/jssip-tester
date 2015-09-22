@@ -5,12 +5,12 @@ var peerconnection_config = { "iceServers": [ {"urls": ["stun:stun.l.google.com:
 
 var localStream, remoteStream;
 
+var GUI = GUI || {};
 
-var GUI = {
+GUI = {
 
     // Active session collection
     Sessions: [],
-
 
     new_call : function(e) {
     // JsSIP.UA newRTCSession event listener
@@ -31,7 +31,7 @@ var GUI = {
          * */
         var aor = uri.toAor();
 
-        var session = session = GUI.getSession(aor);
+        var session = GUI.getSession(aor);
 
         // We already have a session with this peer
         if (session) {
@@ -225,11 +225,9 @@ var GUI = {
             if (call.connection.getLocalStreams().length > 0) {
                 localStream = call.connection.getLocalStreams()[0];
 
-                GUI.selfView.src = window.URL.createObjectURL(localStream);
+                selfView.src = window.URL.createObjectURL(localStream);
 
-                //selfView = JsSIP.rtcninja.attachMediaStream(selfView, localStream);
-
-                GUI.selfView.volume = 0;
+                selfView.volume = 0;
 
                 // TMP
                 window.localStream = localStream;
@@ -249,9 +247,7 @@ var GUI = {
             remoteStream = e.stream;
 
             // Attach remote stream to remoteView
-            GUI.remoteView.src = window.URL.createObjectURL(remoteStream);
-
-            //remoteView = JsSIP.rtcninja.attachMediaStream(GUI.remoteView, remoteStream);
+            remoteView.src = window.URL.createObjectURL(remoteStream);
         });
 
         // NewDTMF
@@ -287,177 +283,89 @@ JsSIP.debug.enable('JsSIP:*');
 
 var eventHandlers = {
 
-    onClickBtnStartSip: function(){
-
-        if(!GUI.fieldWS_URI.value){
-            window.logAreaExample.log.error('not define "WS URI" ')
-        }
-
-        if(!GUI.fieldSIP_password.value){
-            window.logAreaExample.log.error('not define "PASSWORD" ')
-        }
-
-        var configuration = {
-            authorization_user: "",
-            connection_recovery_max_interval: 30,
-            connection_recovery_min_interval: 2,
-            display_name: GUI.field_display_name.value,
-            hack_ip_in_contact: false,
-            hack_via_tcp: false,
-            hack_via_ws: false,
-            log: { level: 'debug' },
-            no_answer_timeout: 60,
-            password: GUI.fieldSIP_password.value,
-            register: true,
-            register_expires: 600,
-            registrar_server: "",
-            session_timers: true,
-            uri: getSIP_URI_my(),
-            use_preloaded_route: false,
-            ws_servers: GUI.fieldWS_URI.value
-        };
-
-        console.log('configurations for connect: ');
-        console.log(configuration);
-
-
-        var ua = new JsSIP.UA(configuration);
-
-        ua.start();
-
-        APP.ua = ua;
-
-        ua.on('connected', function(e){
-
-            window.logAreaExample.log.log('connected', 'WebSocket connection events')
-
-        });
-
-        ua.on('disconnected', function(e){
-
-            window.logAreaExample.log.log('disconnected', 'WebSocket connection events')
-
-        });
-
-        // Call/Message reception callbacks
-        ua.on('newRTCSession', function(e) {
-            window.logAreaExample.log.log('newRTCSession', 'New incoming or outgoing call event')
-            // Set a global '_Session' variable with the session for testing.
-            _Session = e.session;
-            GUI.new_call(e);
-        });
-
-        ua.on('newMessage', function(e){
-
-            window.logAreaExample.log.log('newMessage', 'New incoming or outgoing IM message event')
-
-        });
-
-        ua.on('registered', function(e){
-
-            window.logAreaExample.log.log('registered', 'SIP registration events')
-
-        });
-
-        ua.on('unregistered', function(e){
-
-            window.logAreaExample.log.log('unregistered', 'SIP registration events')
-
-        });
-
-        ua.on('registrationFailed', function(e){
-
-            window.logAreaExample.log.log('registrationFailed', 'SIP registration events')
-        });
-
-        window.logAreaExample.log.log('click', 'Starting the User Agent')
-
-    },
-
-    onClickBtnCallSip: function(){
-        var sip_uri = getSIP_URI_conference();
-
-        var options = {
-            pcConfig: peerconnection_config,
-            'eventHandlers': eventHandlers.sip,
-            'extraHeaders': [
-                'X-Can-Renegotiate: true'
-            ],
-            rtcOfferConstraints: {
-                offerToReceiveAudio: 1,
-                offerToReceiveVideo: 1
-            },
-            'mediaConstraints': {'audio': true, 'video': true}
-        };
-
-        console.log('configurations for call: ' + options);
-        console.log(options);
-
-        APP.session = APP.ua.call(sip_uri, options);
-
-        window.logAreaExample.log.log('click', 'Starting the User Agent')
-    },
-
     sip: {
         'progress':   function(e){
 
-            window.logAreaExample.log.log('progress', 'Making outbound calls')
+            logAreaExample.log('progress', 'Making outbound calls')
 
         },
         'failed':     function(e){
 
-            window.logAreaExample.log.log('failed', 'Making outbound calls', e)
+            logAreaExample.log('failed', 'Making outbound calls', e)
 
         },
         'confirmed':  function(e){
             // Attach local stream to selfView
-            GUI.selfView.src = window.URL.createObjectURL(APP.session.connection.getLocalStreams()[0]);
+            selfView.src = window.URL.createObjectURL(APP.session.connection.getLocalStreams()[0]);
 
-            window.logAreaExample.log.log('confirmed', 'Making outbound calls')
+            logAreaExample.log('confirmed', 'Making outbound calls')
 
         },
         'addstream':  function(e) {
             var stream = e.stream;
 
             // Attach remote stream to remoteView
-            GUI.remoteView.src = window.URL.createObjectURL(stream);
+            remoteView.src = window.URL.createObjectURL(stream);
 
-            window.logAreaExample.log.log('addstream', 'Making outbound calls')
+            logAreaExample.log('addstream', 'Making outbound calls')
 
         },
         'ended':      function(e){
 
-            window.logAreaExample.log.log('ended', 'Making outbound calls')
+            logAreaExample.log('ended', 'Making outbound calls')
 
         }
     }
 };
 
+if ( JsSIP && (isCorrectVersion = JsSIP.version === '0.7.4') )
+    logAreaExample.log(JsSIP.name + ' ' + JsSIP.version);
+else
+    logAreaExample.error('Need JsSIP 0.7.4');
 
+// установить состояния для полей данных
 
+if (localStorage){
 
-var dg = document.getElementById.bind(document);
+    var componentDocument = document.getElementById('dataAreaExample').shadowRoot;
 
-// buttons
-GUI.btnStart = dg('btnStart');
-GUI.btnCall = dg('btnCall');
+    var store = {
+        namespace: 'my_test',
 
+        setData: function(obj){
+            localStorage.setItem(this.namespace, JSON.stringify(obj));
+        },
+        getData: function(){
+            try{
+                return JSON.parse(localStorage.getItem(this.namespace));
+            } catch (e){
+                localStorage.clear();
+                throw 'json was invalid'
+            }
+        }
+    };
 
-// videos
-GUI.selfView =   dg('my-video');
-GUI.remoteView =  dg('peer-video');
+    componentDocument.addEventListener('change', function(event){
+        var target = event.target;
+        var id = target.id;
+        if (id){
+            var data = store.getData();
+            data[id] = target.value;
+            store.setData(data);
+        }
+    });
 
+    if(!store.getData()){
+        store.setData({});
+    }
 
-// add handlers
-if(GUI.btnStart){
-    GUI.btnStart.addEventListener('click', eventHandlers.onClickBtnStartSip, false );
+    var data = store.getData();
+    var key;
+    var node;
+
+    if(data){
+        dataAreaExample.setState(data);
+    }
 }
-if(GUI.btnCall){
-    GUI.btnCall.addEventListener('click', eventHandlers.onClickBtnCallSip, false );
-}
-
-
-
-
 
 

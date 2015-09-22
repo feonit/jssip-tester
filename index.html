@@ -4,25 +4,47 @@
     <meta charset="UTF-8">
     <title></title>
     <script src="libs/jssip.js" type="text/javascript"></script>
-    <link rel="stylesheet" type="text/css" href="libs/bootstrap.css">
-
     <script src="js/utils.js" type="text/javascript"></script>
     <script src="js/component.js" type="text/javascript"></script>
 
     <link rel="import" href="components/session-bar/session-bar.html">
     <link rel="import" href="components/data-area/data-area.html">
     <link rel="import" href="components/agent-bar/agent-bar.html">
-    <link rel="import" href="components/video-area/video-area.html">
     <link rel="import" href="components/log-area/log-area.html">
 
 </head>
 <body>
+<style>
+    .container{
+        width: 50%;
+        margin: 0 auto;
+    }
 
+    video {
+        border: 1px dashed lightgray;
+        width: 100%;
+    }
+    .local, .remote{
+        width: 30%;
+        display: inline-block;
+    }
+</style>
 <div class="container">
     <data-area id="dataAreaExample"></data-area>
     <agent-bar id="agentBarExample"></agent-bar>
     <session-bar id="sessionBarExample"></session-bar>
-    <video-area id="videoAreaExample"></video-area>
+
+    <div>
+        <div class="local">
+            <p>Local Video</p>
+            <video autoplay id="selfView" src=""></video>
+        </div>
+        <div class="remote">
+            <p>Remote Video</p>
+            <video autoplay id="remoteView" src=""></video>
+        </div>
+    </div>
+
     <log-area id="logAreaExample"></log-area>
 </div>
 

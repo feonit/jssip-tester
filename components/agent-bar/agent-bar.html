@@ -4,7 +4,22 @@
         <button id="btnCall" type="button" class="btn btn-primary btn-block">Call number</button>
     </div>
     <style>
-        @import url(components/agent-bar/agent-bar.css);
+        button{
+            padding: 5px;
+            font-size: 14px;
+            border-radius: 4px;
+            background-color: white;
+            margin-bottom: 20px;
+            margin-right: 10px;
+            font-style: italic;
+            outline: none;
+        }
+        :host {
+            display: block;
+        }
     </style>
+    <div class="content">
+        <content></content>
+    </div>
 </template>
 <script src="agent-bar.js" type="text/javascript"></script>

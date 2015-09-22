@@ -4,13 +4,7 @@
 
 var SessionBar = window.UTILS.defineSubclass(function base(){},
     function SessionBar(props){
-        /** @enum {String} */
-        var _TYPES = {
-            TYPE_A: 1,
-            TYPE_B: 2
-        };
 
-        /** @arg {_TYPES}*/
         this.callStatus = 'incoming';
         this.call = null;
         this.uri = 'not uri is here';
@@ -22,7 +16,7 @@ var SessionBar = window.UTILS.defineSubclass(function base(){},
             this.call = props.data.call;
             this.uri = props.data.uri;
             this.displayName = props.data.displayName;
-        }
+        };
 
         if (props){
             this.setState(props)
@@ -40,9 +34,9 @@ var SessionBar = window.UTILS.defineSubclass(function base(){},
             if (!this.call) return;
 
             if (this.callStatus === 'incoming'){
-                window.GUI.buttonAnswerClick(this.call)
+                GUI.buttonAnswerClick(this.call)
             } else {
-                window.GUI.buttonDialClick(this.uri)
+                GUI.buttonDialClick(this.uri)
             }
         },
         /**
@@ -52,7 +46,7 @@ var SessionBar = window.UTILS.defineSubclass(function base(){},
         onClickBtnHangup: function(event){
             if (!this.call) return;
 
-            window.GUI.buttonHangupClick(this.call)
+            GUI.buttonHangupClick(this.call)
         },
 
         /**
@@ -85,9 +79,6 @@ Component.register({
 
     // даем имя компоненту
     elementTagName: 'session-bar',
-
-    // контекст его определения
-    ownerDocument: document.currentScript.ownerDocument,
 
     // определяет внутреннее состояние
     constructor: SessionBar,

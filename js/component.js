@@ -8,58 +8,117 @@ window.Component = (function(){
 
     Component.register = function(attributes){
         if(!attributes.constructor) throw 'need constructor';
-        if(!attributes.ownerDocument) throw 'need ownerDocument';
         if(!attributes.elementTagName) throw 'need elementTagName';
 
-        var template = attributes.ownerDocument.getElementsByTagName('template')[0];
+        // контекст его определения
+        var ownerDocument = document.currentScript.ownerDocument;
+
+        var templateFn = attributes.template
+            ? attributes.template
+            : function () { return ownerDocument.getElementsByTagName('template')[0].innerHTML };
+
         var Proto = Object.create(HTMLElement.prototype);
 
+        _mixProto(Proto, attributes.constructor.prototype);
+        /**
+         * @abstract
+         * @this {Object}
+         * */
         Proto.createdCallback = function() {
-            /** @type {HTMLElement}*/
-            var element = this;
-            var id = this.id;
-
-            window[id] = new SurrogateComponent(null, element);
-        };
-
-        document.registerElement(attributes.elementTagName, {
-            prototype: Proto
-        });
-
-        function SurrogateComponent(params, element){
-            this.element = element;
-            this.params = params;
-            this._afterChange = function(){
-                var shadow = element.createShadowRoot();
-                var clone = template.content.cloneNode(true);
-
-                //shadow.applyAuthorStyles = true;
-                shadow.appendChild(clone);
-
-                if (attributes.events){
-                    _bindEvents(this, attributes.events, element)
-                }
-            };
-
-            // установить свойства конструктора
+            // установить свойства
             attributes.constructor.apply(this, arguments);
 
             // переписать все свойства конструктора на сеттеры и гетеры
             _setProperties({
                 instance: this,
+
+                // собственные свойства эеземпляра
                 props: _clone(this),
-                afterChange: this._afterChange.bind(this)
+
+                // callback render
+                afterChange: function(){
+                    _afterChange.call(this, templateFn);
+                }
             });
 
+            this._preventChanges = false;
+
             // отрисовать
-            this._afterChange(arguments);
-        }
+            _afterChange.call(this, templateFn);
 
-        SurrogateComponent.prototype = attributes.constructor.prototype;// todo mix proto
+            // открыть глобально
+            if (this.id){
+                if(!window.components) window.components = {};
+                window.components[this.id] = this;
+            }
+        };
+        /**
+         * @abstract
+         * */
+        Proto.attachedCallback = function(){
+            if (attributes.events){
+                _bindEvents(this, attributes.events)
+            }
+        };
+        /**
+         * @abstract
+         * */
+        Proto.detachedCallback = function(){
+            console.log('detachedCallback')
+        };
+        /**
+         * @abstract
+         * */
+        Proto.attributeChangedCallback = function(){
+            console.log('attributeChangedCallback')
+        };
 
-        return SurrogateComponent;
+        // всем добавляю, заменить на микс // todo mix proto
+        Proto.setState = function(props){
+            // todo clone objects
+            this._preventChanges = true;
+            for (var key in props){
+                this[key] = props[key];
+            }
+            this._preventChanges = false;
+            _afterChange.call(this, templateFn);
+
+        };
+
+        // в этот Proto нужно примиксовать прототип конструктора
+
+        document.registerElement(attributes.elementTagName, {
+            prototype: Proto
+        });
     };
 
+    /**
+     * Handler for render HTML of component
+     * @this {HTMLElement}
+     * @param {Function} templateFn
+     * */
+    function _afterChange(templateFn){
+        if (this._preventChanges) return;
+
+        var shadow = this.shadowRoot;
+
+        if (!shadow){
+            shadow = this.createShadowRoot();
+        }
+
+        var temp = document.createElement('div');
+        temp.innerHTML = templateFn.apply(this, arguments);
+
+        // remove nodes in shadow
+        while (shadow.firstChild){
+            shadow.firstChild.remove();
+        }
+
+        // insert nodes
+        while (temp.firstChild){
+            shadow.appendChild(temp.firstChild);
+        }
+    }
     /**
      * @param {Object} options
      * @param {Object} options.instance
@@ -69,39 +128,46 @@ window.Component = (function(){
         var instance = options.instance,
             properties = options.props || {},
             key,
-            typeOf;
+            typeOf,
+            value;
 
         if (!instance){
             throw 'not found a target'
         }
 
         // todo after check props is opject
-
+        // убрать функции
         for (key in properties){
-            if (!properties.hasOwnProperty(key)) continue;
+            typeOf = typeof options.instance[key];
+            value = options.instance[key];
 
-            (function(key){
-                typeOf = typeof properties[key];
+            // not functions and not hash obj (except null)
+            if (typeOf === 'function' || ( typeOf === 'object' && value !== value)) continue;
+            //if (!properties.hasOwnProperty(key)) continue;
 
-                // доделать подобъекты
-                if (typeOf !== 'object'){
-                    _defineBehaviorProperty(key, options);
-                } else {
-                    // try if this is a object or function
-                    //setProperties(this.)
-                    throw 'value mast be a simple type'
-                }
-            }(key));
+            //(function(key){
+            typeOf = typeof properties[key];
+
+            // доделать подобъекты
+            if (typeOf !== 'object'){
+                _defineBehaviorProperty(key, options);
+            } else {
+                // try if this is a object or function
+                //setProperties(this.)
+                throw 'value mast be a simple type'
+            }
+            //}(key));
         }
     }
     /**
+     * Create clone of object
      * @param {Object} source
      * */
     function _clone(source){
         var clone = {}, key, typeOf;
 
         for (key in source){
-            if (!source.hasOwnProperty(key)) continue;
+            if (!source.hasOwnProperty(key)) continue;// todo очень большой ненужный перебор
 
             typeOf = typeof source[key];
 
@@ -113,6 +179,7 @@ window.Component = (function(){
         return clone;
     }
     /**
+     * Define property as ES5 style
      * @param {String} key — Name of property
      * @param {Object} options
      * @param {Object} options.instance
@@ -137,11 +204,11 @@ window.Component = (function(){
         });
     }
     /**
-     * @param {Object} instance
+     * Bind event handlers
+     * @param {Object} nodeElement
      * @param {Object} events
-     * @param {Object} wrapper
      * */
-    function _bindEvents(instance, events, wrapper){
+    function _bindEvents(nodeElement, events){
         for (var key in events){
             var split = key.split(' ');
 
@@ -150,13 +217,30 @@ window.Component = (function(){
             }
             var eventName = split[0];
             var eventSelector = split[1];
-            var handler = instance[events[key]];
+            var handlerValue = events[key];
+            var handler = (typeof handlerValue === 'function') ? handlerValue : nodeElement[handlerValue];
+            var nodeList = nodeElement.shadowRoot.querySelectorAll(eventSelector);
 
-            var elem = wrapper.shadowRoot.querySelector(eventSelector);
-            elem.addEventListener(eventName, handler.bind(instance), false);
+            if (nodeList && handler){
+                var slice = Array.prototype.slice;
+                var forEach = Array.prototype.forEach;
+                forEach.call(slice.call(nodeList), function(element){
+                    element.addEventListener(eventName, handler.bind(nodeElement), false);
+                });
+            }
         }
     }
 
-    return Component;
+    /**
+     * Mix property of mixin to obj
+     * */
+    function _mixProto(obj, mixin){
+        for (var key in mixin){
+            if (!mixin.hasOwnProperty(key) || key ==='constructor') continue;
+            obj[key] = mixin[key]
+        }
+        return obj;
+    }
 
+    return Component;
 }());

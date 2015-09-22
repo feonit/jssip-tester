@@ -4,110 +4,128 @@
 
 (function(){
 
-    function Сonstructor(){
-        this.some = 'some';
+    function Сonstructor(attributes){
+        this.name = '1000';
+        this.wsUri = 'wss://sip.nefrosovet.ru:443';
+        this.realm = 'sip.nefrosovet.ru';
+        this.displayName = 'test name';
+        this.sipPassword = '';
+        this.userName = '';
+        this.number = '';
     }
+
+    Сonstructor.prototype = {
+        getSIP_URI_my: function (){
+            var sip_uri;
+
+            if(!this.name){
+                GUI.console.error('not define "SIP URI name" ')
+            }
+
+            if(!this.realm){
+                GUI.console.error('not define "SIP URI realm" ')
+            }
+
+            sip_uri = 'sip:' + this.name + '@' + this.realm;
+
+            return sip_uri;
+        },
+
+        getSIP_URI_conference: function (){
+            var sip_uri;
+
+            if(!this.number){
+                GUI.console.error('not define "SIP URI number" ')
+            }
+
+            if(!this.realm){
+                GUI.console.error('not define "SIP URI realm" ')
+            }
+
+            sip_uri = 'sip:' + this.number + '@' + this.realm;
+
+            return sip_uri;
+        }
+    };
 
     Component.register({
 
         // даем имя компоненту
         elementTagName: 'data-area',
 
-        // контекст его определения
-        ownerDocument: document.currentScript.ownerDocument,
-
         // определяет внутреннее состояние
         constructor: Сonstructor,
 
         // обработчики внутренного состояния
-        events: {}
+        events: {
+            'change #name' : function(event){
+                this.name = event.currentTarget.value;
+            },
+            'change #wsUri' : function(event){
+                this.wsUri = event.currentTarget.value;
+            },
+            'change #realm' : function(event){
+                this.realm = event.currentTarget.value;
+            },
+            'change #displayName' : function(event){
+                this.displayName = event.currentTarget.value;
+            },
+            'change #sipPassword' : function(event){
+                this.sipPassword = event.currentTarget.value;
+            },
+            'change #userName' : function(event){
+                this.userName = event.currentTarget.value;
+            },
+            'change #number' : function(event){
+                this.number = event.currentTarget.value;
+            }
+        },
+
+        template: function(){
+            with (this){
+
+                var string = `
+                    <div class="data-b">
+
+                        <div class="form-group">
+                            <label for="fieldName">Name</label>
+                            <input type="text" class="form-control" id="name" value="${name}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fieldWS_URI">WS URI</label>
+                            <input type="text" class="form-control" id="wsUri" value="${wsUri}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fieldSIP_URI_realm">Realm</label>
+                            <input type="text" class="form-control" id="realm" placeholder="" value="${realm}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="field_display_name">Display name</label>
+                            <input type="text" class="form-control" id="displayName" placeholder="" value="${displayName}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fieldSIP_password">SIP password</label>
+                            <input type="text" class="form-control" id="sipPassword" value="${sipPassword}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fieldSIP_URI_name">Username</label>
+                            <input type="text" class="form-control" id="userName" placeholder="" value="${userName}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="fieldNumber">Number</label>
+                            <input type="text" class="form-control" id="number" value="${number}">
+                        </div>
+
+                    </div>
+                `;
+            }
+            return string;
+        }
     });
-
-
-
-    //// todo
-    //// inputs
-    //GUI.fieldName = dg('fieldName');
-    //GUI.fieldWS_URI = dg('fieldWS_URI');
-    //GUI.fieldSIP_URI_name = dg('fieldSIP_URI_name');
-    //GUI.fieldSIP_URI_realm = dg('fieldSIP_URI_realm');
-    //GUI.fieldSIP_password = dg('fieldSIP_password');
-    //GUI.fieldNumber = dg('fieldNumber');
-    //GUI.field_display_name = dg('field_display_name');
-
-
-    //function getSIP_URI_my(){
-    //    var sip_uri;
-    //
-    //    if(!GUI.fieldSIP_URI_name.value){
-    //        GUI.console.error('not define "SIP URI name" ')
-    //    }
-    //
-    //    if(!GUI.fieldSIP_URI_realm.value){
-    //        GUI.console.error('not define "SIP URI realm" ')
-    //    }
-    //
-    //    sip_uri = 'sip:' + GUI.fieldSIP_URI_name.value + '@' + GUI.fieldSIP_URI_realm.value;
-    //
-    //    return sip_uri;
-    //}
-    //
-    //function getSIP_URI_conference(){
-    //    var sip_uri;
-    //
-    //    if(!GUI.fieldNumber.value){
-    //        GUI.console.error('not define "SIP URI number" ')
-    //    }
-    //
-    //    if(!GUI.fieldSIP_URI_realm.value){
-    //        GUI.console.error('not define "SIP URI realm" ')
-    //    }
-    //
-    //    sip_uri = 'sip:' + GUI.fieldNumber.value + '@' + GUI.fieldSIP_URI_realm.value;
-    //
-    //    return sip_uri;
-    //}
-
-
-    //if (localStorage){
-    //    var store = {
-    //        namespace: 'my_test',
-    //
-    //        setData: function(obj){
-    //            localStorage.setItem(this.namespace, JSON.stringify(obj));
-    //        },
-    //        getData: function(){
-    //            try{
-    //                return JSON.parse(localStorage.getItem(this.namespace));
-    //            } catch (e){
-    //                localStorage.clear();
-    //                throw 'json was invalid'
-    //            }
-    //        }
-    //    };
-    //
-    //    if(!store.getData()){
-    //        store.setData({});
-    //    }
-    //
-    //    document.addEventListener('change', function(event){
-    //        var target = event.target;
-    //        var id = target.id;
-    //        if (id){
-    //            var data = store.getData();
-    //            data[id] = target.value;
-    //            store.setData(data);
-    //        }
-    //    });
-    //
-    //    var data = store.getData();
-    //    var key;
-    //
-    //    if(data){
-    //        for(key in data) {
-    //            var node = document.getElementById(key);
-    //            node.value = data[key];
-    //        }
-    //    }
-    //}
 })();
