@@ -26,7 +26,7 @@
         return constructor;
     }
 
-    window.UTILS = {
+    window._ = {
         // A simple function for creating simple subclasses
         defineSubclass : defineSubclass
     };

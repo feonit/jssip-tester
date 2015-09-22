@@ -2,6 +2,10 @@
     <div class="well center-block">
         <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
         <button id="btnCall" type="button" class="btn btn-primary btn-block">Call number</button>
+
+        <img class="js-btnPhoneUp" src="images/icon-dial.png">
+        <img class="js-btnPhoneDown" src="images/icon-hangup.png">
+
     </div>
     <style>
         button{
@@ -16,6 +20,22 @@
         }
         :host {
             display: block;
+        }
+
+        :host(.info) .content {
+            color: green;
+        }
+
+        :host(.warning) .content {
+            color: red;
+        }
+
+        img{
+            cursor: pointer;
+        }
+        img:active{
+            position: relative;
+            top: 2px;
         }
     </style>
     <div class="content">

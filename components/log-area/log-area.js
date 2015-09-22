@@ -6,8 +6,6 @@
 
     function Сonstructor(props){
         this.textLog = '...';
-
-        var isCorrectVersion;
     }
 
     Сonstructor.prototype.log = function fn(eventName, groupName, error){
@@ -51,7 +49,7 @@
                 return `
                     <label for="textarea">Log:</label>
                     <br>
-                    <textarea value="${textLog}" id="textarea" class="form-control" rows="15" disabled></textarea>
+                    <textarea id="textarea" class="form-control" rows="15" disabled>${textLog}</textarea>
                 `
             }
         }

@@ -318,6 +318,8 @@ var eventHandlers = {
     }
 };
 
+var isCorrectVersion;
+
 if ( JsSIP && (isCorrectVersion = JsSIP.version === '0.7.4') )
     logAreaExample.log(JsSIP.name + ' ' + JsSIP.version);
 else
