@@ -51,7 +51,6 @@ GUI = {
         GUI.setCallEventHandlers(e);
     },
 
-    //sounds/incoming-call2.ogg
     playSound : function _fn(sound_file) {
         if(!_fn.soundPlayer){
             _fn.soundPlayer = document.createElement("audio");
@@ -77,7 +76,6 @@ GUI = {
             // iscomposing stuff.
             //compositionIndicator = GUI.f(uri);
             //compositionIndicator.idle();
-
 
             session = {
                 uri: uri,
@@ -191,11 +189,7 @@ GUI = {
 
         // check custom X-Can-Renegotiate header field
         if (call.direction === 'incoming') {
-            if (call.request.getHeader('X-Can-Renegotiate') === 'false') {
-                call.data.remoteCanRenegotiateRTC = false;
-            } else {
-                call.data.remoteCanRenegotiateRTC = true;
-            }
+            call.data.remoteCanRenegotiateRTC = call.request.getHeader('X-Can-Renegotiate') !== 'false';
 
             GUI.playSound("sounds/incoming-call2.ogg");
 
@@ -234,12 +228,7 @@ GUI = {
             }
 
             if (e.originator === 'remote') {
-                if (e.response.getHeader('X-Can-Renegotiate') === 'false') {
-                    call.data.remoteCanRenegotiateRTC = false;
-                }
-                else {
-                    call.data.remoteCanRenegotiateRTC = true;
-                }
+                call.data.remoteCanRenegotiateRTC = e.response.getHeader('X-Can-Renegotiate') !== 'false';
             }
         });
 
@@ -280,43 +269,6 @@ APP.session = null;
 
 JsSIP.debug.enable('JsSIP:*');
 
-
-var eventHandlers = {
-
-    sip: {
-        'progress':   function(e){
-
-            logAreaExample.log('progress', 'Making outbound calls')
-
-        },
-        'failed':     function(e){
-
-            logAreaExample.log('failed', 'Making outbound calls', e)
-
-        },
-        'confirmed':  function(e){
-            // Attach local stream to selfView
-            selfView.src = window.URL.createObjectURL(APP.session.connection.getLocalStreams()[0]);
-
-            logAreaExample.log('confirmed', 'Making outbound calls')
-
-        },
-        'addstream':  function(e) {
-            var stream = e.stream;
-
-            // Attach remote stream to remoteView
-            remoteView.src = window.URL.createObjectURL(stream);
-
-            logAreaExample.log('addstream', 'Making outbound calls')
-
-        },
-        'ended':      function(e){
-
-            logAreaExample.log('ended', 'Making outbound calls')
-
-        }
-    }
-};
 
 var isCorrectVersion;
 

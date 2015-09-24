@@ -3,8 +3,7 @@
  */
 
 (function(){
-
-    function Сonstructor(attributes){
+    function HTMLElementComponentDataArea(){
         this.name = '1000';
         this.wsUri = 'wss://sip.nefrosovet.ru:443';
         this.realm = 'sip.nefrosovet.ru';
@@ -14,49 +13,34 @@
         this.number = '';
     }
 
-    Сonstructor.prototype = {
+    HTMLElementComponentDataArea.prototype = {
+        /**
+         * @throws {RangeError}
+         * */
         getSIP_URI_my: function (){
-            var sip_uri;
-
             if(!this.name){
-                GUI.console.error('not define "SIP URI name" ')
+                throw RangeError('"name" is empty');
             }
-
             if(!this.realm){
-                GUI.console.error('not define "SIP URI realm" ')
+                throw RangeError('"realm" is empty');
             }
-
-            sip_uri = 'sip:' + this.name + '@' + this.realm;
-
-            return sip_uri;
+            return 'sip:' + this.name + '@' + this.realm;
         },
-
+        /**
+         * @throws {RangeError}
+         * */
         getSIP_URI_conference: function (){
-            var sip_uri;
-
             if(!this.number){
-                GUI.console.error('not define "SIP URI number" ')
+                throw RangeError('"number" is empty');
             }
-
             if(!this.realm){
-                GUI.console.error('not define "SIP URI realm" ')
+                throw RangeError('"realm" is empty');
             }
-
-            sip_uri = 'sip:' + this.number + '@' + this.realm;
-
-            return sip_uri;
+            return 'sip:' + this.number + '@' + this.realm;
         }
     };
 
-    Component.register({
-
-        // даем имя компоненту
-        elementTagName: 'data-area',
-
-        // определяет внутреннее состояние
-        constructor: Сonstructor,
-
-        // обработчики внутренного состояния
+    HTMLElementComponent.register('data-area', HTMLElementComponentDataArea, {
         events: {
             'change #name' : function(event){
                 this.name = event.currentTarget.value;
@@ -80,7 +64,6 @@
                 this.number = event.currentTarget.value;
             }
         },
-
         template: function(){
             with (this){
 
