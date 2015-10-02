@@ -5,7 +5,13 @@
     <title></title>
     <script src="libs/jssip.js" type="text/javascript"></script>
     <script src="js/utils.js" type="text/javascript"></script>
+    <script src="js/systems/sound/AudioPlayer.js" type="text/javascript"></script>
+    <script src="js/systems/SIP/SessionSIP.js" type="text/javascript"></script>
+    <script src="js/systems/SIP/AgentSIP.js" type="text/javascript"></script>
+    <script src="js/systems/storage/StorageManager.js" type="text/javascript"></script>
     <script src="js/HTMLElementComponent.js" type="text/javascript"></script>
+    <script src="js/script.js" type="text/javascript"></script>
+
     <!--<script src="http://component.kitchen/packages/sample/webcomponentsjs/webcomponents.js"></script>-->
 
     <link rel="import" href="components/data-area/data-area.html">
@@ -26,6 +32,9 @@
         width: 30%;
         display: inline-block;
     }
+    textarea{
+        width: 100%;
+    }
 </style>
 <div class="container">
     <data-area id="dataAreaExample"></data-area>
@@ -45,7 +54,6 @@
     <log-area id="logAreaExample"></log-area>
 </div>
 
-<script src="js/script.js" type="text/javascript"></script>
 
 </body>
 </html>

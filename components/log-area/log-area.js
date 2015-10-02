@@ -46,7 +46,7 @@
                 return `
                     <label for="textarea">Log:</label>
                     <br>
-                    <textarea id="textarea" class="form-control" rows="15" disabled>${textLog}</textarea>
+                    <textarea style="width: 100%" id="textarea" class="form-control" rows="15" disabled>${textLog}</textarea>
                 `
             }
         }

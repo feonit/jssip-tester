@@ -7,6 +7,8 @@
     // dep
     var dataAreaExample = window.dataAreaExample;
     var logAreaExample = window.logAreaExample;
+    var agentSIP = window.agentSIP;
+    var audioPlayer = window.audioPlayer;
 
     function HTMLElementComponentAgentBar(){
         this.callStatus = 'incoming';
@@ -16,9 +18,11 @@
     }
 
     HTMLElementComponentAgentBar.prototype = {
-
-        onClickBtnStartSip: function(){
-
+        /**
+         * @this {HTMLElementComponentAgentBar}
+         * @param {MouseEvent} event
+         * */
+        onClickBtnStartSip: function(event){
             if(!dataAreaExample.wsUri){
                 logAreaExample.error('not define "WS URI" ')
             }
@@ -27,65 +31,45 @@
                 logAreaExample.error('not define "PASSWORD" ')
             }
 
-            try {
-                var uri = dataAreaExample.getSIP_URI_my();
-            } catch (e){
-                logAreaExample.log(e.message);
-            }
+            agentSIP.jssipStart(
+                dataAreaExample.getSIP_URI_my(),
+                dataAreaExample.sipPassword,
+                dataAreaExample.wsUri, {
+                    display_name: dataAreaExample.displayName
+                });
 
-            var configuration = {
-                authorization_user: "",
-                connection_recovery_max_interval: 30,
-                connection_recovery_min_interval: 2,
-                display_name: dataAreaExample.displayName,
-                hack_ip_in_contact: false,
-                hack_via_tcp: false,
-                hack_via_ws: false,
-                log: { level: 'debug' },
-                no_answer_timeout: 60,
-                password: dataAreaExample.sipPassword,
-                register: true,
-                register_expires: 600,
-                registrar_server: "",
-                session_timers: true,
-                uri: uri,
-                use_preloaded_route: false,
-                ws_servers: dataAreaExample.wsUri
-            };
 
-            var ua = new JsSIP.UA(configuration);
-
-            ua.start();
-
-            APP.ua = ua;
-
-            ua.on('connecting', function(e){
+            agentSIP.onConnecting = (function(e){
                 logAreaExample.log('connecting', 'WebSocket connection events')
             });
-            ua.on('connected', function(e){
+            agentSIP.onConnected = (function(e){
                 logAreaExample.log('connected', 'WebSocket connection events')
             });
-            ua.on('disconnected', function(e){
+            agentSIP.onDisconnected = (function(e){
                 logAreaExample.log('disconnected', 'WebSocket connection events')
             });
-            ua.on('registered', function(e){
+            agentSIP.onRegistered = (function(e){
                 logAreaExample.log('registered', 'SIP registration events')
             });
-            ua.on('unregistered', function(e){
+            agentSIP.onUnregistered = (function(e){
                 logAreaExample.log('unregistered', 'SIP registration events')
             });
-            ua.on('registrationFailed', function(e){
+            agentSIP.onRegistrationFailed = (function(e){
                 logAreaExample.log('registrationFailed', 'SIP registration events')
             });
-            ua.on('newRTCSession', function(e) {
-                window.logAreaExample.log('newRTCSession', 'New incoming or outgoing call event');
-                // Set a global '_Session' variable with the session for testing.
-                _Session = e.session;
-                GUI.new_call(e);
+            agentSIP.onNewRTCSession = (function(e) {
+                logAreaExample.log('newRTCSession', 'New incoming or outgoing call event');
+            });
+            agentSIP.onNewRTCSessionIncoming = (function(e) {
+                logAreaExample.log('onNewRTCSessionIncoming', 'New incoming or outgoing call event');
+                audioPlayer.playSound("sounds/incoming-call2.ogg");
             });
         },
-
-        onClickBtnCallSip: function(){
+        /**
+         * @this {HTMLElementComponentAgentBar}
+         * @param {MouseEvent} event
+         * */
+        onClickBtnCallSip: function(event){
             try{
                 var sip_uri = dataAreaExample.getSIP_URI_conference();
             } catch (e) {
@@ -103,7 +87,7 @@
                     },
                     'confirmed':  function(e){
                         // Attach local stream to selfView
-                        selfView.src = window.URL.createObjectURL(APP.session.connection.getLocalStreams()[0]);
+                        selfView.src = window.URL.createObjectURL(agentSIP.session.connection.getLocalStreams()[0]);
                         logAreaExample.log('confirmed', 'Making outbound calls')
                     },
                     'addstream':  function(e) {
@@ -125,38 +109,37 @@
                 'mediaConstraints': {'audio': true, 'video': true}
             };
 
-            APP.session = APP.ua.call(sip_uri, options);
+            agentSIP.session = agentSIP.ua.call(sip_uri, options);
 
             logAreaExample.log('click', 'Starting the User Agent')
         },
         /**
-         * @this {SessionComponent}
+         * @this {HTMLElementComponentAgentBar}
          * @param {MouseEvent} event
          * */
         onClickBtnDial: function(event){
             if (!this.call) return;
 
             if (this.callStatus === 'incoming'){
-                GUI.buttonAnswerClick(this.call)
+                agentSIP.jssipAnswerCall(this.call)
             } else {
-                GUI.buttonDialClick(this.uri)
+                agentSIP.jssipCall(this.uri)
             }
         },
         /**
-         * @this {SessionComponent}
+         * @this {HTMLElementComponentAgentBar}
          * @param {MouseEvent} event
          * */
         onClickBtnHangup: function(event){
             if (!this.call) return;
 
-            GUI.buttonHangupClick(this.call)
+            agentSIP.jssipTerminateCall(this.call)
         },
 
         /**
          * Регистрация на события сессии
          * */
         registerCallSession: function(){
-
             var call = this.call;
             var self = this;
 
@@ -183,5 +166,4 @@
             'click .js-btnPhoneDown': 'onClickBtnHangup'
         }
     });
-
 })();

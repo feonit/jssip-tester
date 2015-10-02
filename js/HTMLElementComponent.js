@@ -4,6 +4,9 @@
 
 window.HTMLElementComponent = (function () {
 
+    var _slice = Array.prototype.slice;
+    var _forEach = Array.prototype.forEach;
+
     /**
      * Create clone of object
      * @param {Object} source
@@ -100,13 +103,38 @@ window.HTMLElementComponent = (function () {
      * */
     HTMLElementComponent.prototype.createdCallback = function () {
 
+
+        Object.defineProperties(this,{
+            /**
+             * Collection of binding
+             * */
+            _binding: {
+                value: [],
+                enumerable: false
+            },
+            /**
+             * One render instead more
+             * */
+            _preventChanges: {
+                value: false,
+                enumerable: false
+            },
+            /**
+             * Collection of binding
+             * */
+            _handlers: {
+                value: {},
+                enumerable: false
+            }
+        });
+
         // add special properties
         if ( this.Constructor ){
             this.Constructor.apply(this, arguments);
         }
 
         this._setBehaviorProperties(_clone(this), function () {
-            this._render();
+            this._reRender();
         });
 
         this._preventChanges = false;
@@ -125,16 +153,14 @@ window.HTMLElementComponent = (function () {
      * @abstract
      * */
     HTMLElementComponent.prototype.attachedCallback = function () {
-        if (this.options.events) {
-            this._bindEvents(this.options.events)
-        }
+
     };
     /**
      * Элемент откреплен
      * @abstract
      * */
     HTMLElementComponent.prototype.detachedCallback = function () {
-        console.log('detachedCallback')
+        this._unbindEvents();
     };
     /**
      * Атрибут поменялся
@@ -158,7 +184,7 @@ window.HTMLElementComponent = (function () {
             this[key] = props[key];
         }
         this._preventChanges = false;
-        this._render();
+        this._reRender();
     };
     /**
      * Overwrite all properties in the constructor setters and getters
@@ -203,16 +229,30 @@ window.HTMLElementComponent = (function () {
      * @this {HTMLElementComponent}
      * */
     HTMLElementComponent.prototype._defineBehaviorProperty = function (key, props, afterChangeCallback) {
+        var that = this;
         Object.defineProperty(this, key, {
             get: function () {
                 return props[key];
             },
             set: function (value) {
-                props[key] = value;
                 if (afterChangeCallback) {
+
+                    var change = {
+                        name: key,
+                        object: that,
+                        oldValue: that[key],
+                        newValue: value,
+                        type: 'update'
+                    };
+                    that.triggerChange(change);
+
+                    props[key] = value;
+
                     afterChangeCallback.call(this);
                 }
-            }
+            },
+            enumerable: true,
+            configurable: true
         });
     };
     /**
@@ -221,28 +261,40 @@ window.HTMLElementComponent = (function () {
      * @this {HTMLElementComponent}
      * */
     HTMLElementComponent.prototype._render = function () {
-        if (this._preventChanges) return;
-
-        var shadow = this.shadowRoot || this.createShadowRoot();
+        var shadow = this.shadowRoot || this.createShadowRoot(); // how remove shadowRoot?
         var temp = document.createElement('div');
 
         temp.innerHTML = this.templateFn();
+
+        // insert nodes
+        while (temp.firstChild) {
+            shadow.appendChild(temp.firstChild);
+        }
+
+        if (this.options.events) {
+            this._bindEvents(this.options.events);
+        }
+    };
+
+    HTMLElementComponent.prototype._reRender = function(){
+        if (this._preventChanges) return;
+
+        var shadow = this.shadowRoot;
+
+        this._unbindEvents();
 
         // remove nodes in shadow
         while (shadow.firstChild) {
             shadow.firstChild.remove();
         }
 
-        // insert nodes
-        while (temp.firstChild) {
-            shadow.appendChild(temp.firstChild);
-        }
+        this._render();
     };
 
     /**
      * Bind event handlers (like the Backbone.View)
      * @private
-     * @param {Object} events
+     * @param {Object} events — { "eventName elementSelector": "eventHandler" }
      * @this {HTMLElementComponent}
      * */
     HTMLElementComponent.prototype._bindEvents = function (events) {
@@ -254,17 +306,70 @@ window.HTMLElementComponent = (function () {
             }
             var eventName = split[0];
             var eventSelector = split[1];
-            var handlerValue = events[key];
-            var handler = (typeof handlerValue === 'function') ? handlerValue : this[handlerValue];
+            var eventHandler = events[key];
+            var handler = (typeof eventHandler === 'function') ? eventHandler : this[eventHandler];
             var nodeList = this.shadowRoot.querySelectorAll(eventSelector);
 
             if (nodeList && handler) {
-                var slice = Array.prototype.slice;
-                var forEach = Array.prototype.forEach;
-                forEach.call(slice.call(nodeList), function (element) {
-                    element.addEventListener(eventName, handler.bind(this), false);
+                var that = this;
+
+                _forEach.call(_slice.call(nodeList), function (element) {
+
+                    var fn = handler.bind(that);
+
+                    var stored = {
+                        element: element,
+                        eventName: eventName,
+                        handler: fn
+                    };
+
+                    element.addEventListener(eventName, fn, false);
+
+                    that._binding.push(stored);
+
+
                 });
             }
+        }
+    };
+    /**
+     * Unbind event handlers
+     * @private
+     * @this {HTMLElementComponent}
+     * */
+    HTMLElementComponent.prototype._unbindEvents = function (){
+        if (this._binding.length > 0) {
+            _forEach.call(this._binding, function(stored){
+                stored.element.removeEventListener(stored.eventName, stored.handler, false);
+            });
+            this._binding = [];
+        }
+    };
+
+    HTMLElementComponent.prototype.on = function _on(eventName, callback){
+
+        this._handlers[eventName] || (this._handlers[eventName]=[]);
+
+        this._handlers[eventName].push(callback);
+
+        ////_on.collection = _on.collection || [];
+        //
+        //// observed only Object.keys(this) property
+        //Object.observe(this, function(event){
+        //    if (event[0].type === eventName){
+        //        callback.apply(this, arguments);
+        //    }
+        //});
+
+    };
+
+    HTMLElementComponent.prototype.triggerChange = function(event){
+        var that = this;
+        if (event.type === 'update'){
+            this._handlers['update'] = this._handlers['update'] || [];
+            this._handlers['update'].forEach(function(handler){
+                handler.call(that, event);
+            });
         }
     };
 
