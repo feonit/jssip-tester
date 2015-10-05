@@ -24,7 +24,7 @@ var AudioPlayer = (function(document){
             });
 
             this.AudioPlayer.setAttribute("src", soundFileSrc);
-            this.AudioPlayer.volume = options.value;
+            this.AudioPlayer.volume = options.volume;
             this.AudioPlayer.play();
         }
     };

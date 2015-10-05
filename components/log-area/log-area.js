@@ -44,9 +44,19 @@
         template: function(){
             with(this){
                 return `
-                    <label for="textarea">Log:</label>
-                    <br>
+                    <style>
+                    .b-log-area{
+                        padding: 10px;
+                        border: 1px dashed gray;
+                        margin: 20px;
+                    }
+                    </style>
+                    <div class="b-log-area">
+                    <p>
+                        <label for="textarea">Log:</label>
+                    </p>
                     <textarea style="width: 100%" id="textarea" class="form-control" rows="15" disabled>${textLog}</textarea>
+                    </div>
                 `
             }
         }

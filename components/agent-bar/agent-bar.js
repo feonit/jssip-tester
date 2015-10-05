@@ -11,10 +11,10 @@
     var audioPlayer = window.audioPlayer;
 
     function HTMLElementComponentAgentBar(){
-        this.callStatus = 'incoming';
-        this.call = null;
+        this.sessionSIP = null;
         this.uri = 'not uri is here';
         this.displayName = 'not display name is here';
+        this.statusSession = '...';
     }
 
     HTMLElementComponentAgentBar.prototype = {
@@ -23,6 +23,8 @@
          * @param {MouseEvent} event
          * */
         onClickBtnStartSip: function(event){
+            logAreaExample.log('click', 'Starting the User Agent');
+
             if(!dataAreaExample.wsUri){
                 logAreaExample.error('not define "WS URI" ')
             }
@@ -36,8 +38,8 @@
                 dataAreaExample.sipPassword,
                 dataAreaExample.wsUri, {
                     display_name: dataAreaExample.displayName
-                });
-
+                }
+            );
 
             agentSIP.onConnecting = (function(e){
                 logAreaExample.log('connecting', 'WebSocket connection events')
@@ -70,58 +72,56 @@
          * @param {MouseEvent} event
          * */
         onClickBtnCallSip: function(event){
+            logAreaExample.log('click', 'Starting the Session');
+
             try{
                 var sip_uri = dataAreaExample.getSIP_URI_conference();
             } catch (e) {
                 logAreaExample.log(e.message)
             }
 
-            var options = {
-                pcConfig: peerconnection_config,
-                'eventHandlers': {
-                    'progress':   function(e){
-                        logAreaExample.log('progress', 'Making outbound calls')
-                    },
-                    'failed':     function(e){
-                        logAreaExample.log('failed', 'Making outbound calls', e)
-                    },
-                    'confirmed':  function(e){
-                        // Attach local stream to selfView
-                        selfView.src = window.URL.createObjectURL(agentSIP.session.connection.getLocalStreams()[0]);
-                        logAreaExample.log('confirmed', 'Making outbound calls')
-                    },
-                    'addstream':  function(e) {
-                        var stream = e.stream;
-                        remoteView.src = window.URL.createObjectURL(stream);
-                        logAreaExample.log('addstream', 'Making outbound calls')
-                    },
-                    'ended':      function(e){
-                        logAreaExample.log('ended', 'Making outbound calls')
-                    }
-                },
-                'extraHeaders': [
-                    'X-Can-Renegotiate: true'
-                ],
-                rtcOfferConstraints: {
-                    offerToReceiveAudio: 1,
-                    offerToReceiveVideo: 1
-                },
-                'mediaConstraints': {'audio': true, 'video': true}
+            var sessionSIP = agentSIP.jssipCall(sip_uri);
+
+            this.sessionSIP = sessionSIP;
+
+            var that = this;
+
+            sessionSIP.onProgress = function (){
+                that.statusSession = 'in-progress';
+                logAreaExample.log('progress', 'Making outbound calls')
             };
 
-            agentSIP.session = agentSIP.ua.call(sip_uri, options);
+            sessionSIP.onFailed = function(){
+                that.statusSession = 'failed';
+                logAreaExample.log('failed', 'Making outbound calls')
+            };
 
-            logAreaExample.log('click', 'Starting the User Agent')
+            sessionSIP.onConfirmed = function(){
+                logAreaExample.log('confirmed', 'Making outbound calls')
+            };
+
+            sessionSIP.onAddstream = function(){
+                logAreaExample.log('addstream', 'Making outbound calls')
+            };
+
+            sessionSIP.onEnded = function(e){
+                that.statusSession = 'terminated';
+                logAreaExample.log('ended', 'Making outbound calls')
+            };
+
+            sessionSIP.onAccepted = function(){
+                that.statusSession = 'answered';
+            };
         },
         /**
          * @this {HTMLElementComponentAgentBar}
          * @param {MouseEvent} event
          * */
         onClickBtnDial: function(event){
-            if (!this.call) return;
+            if (!this.sessionSIP) return;
 
-            if (this.callStatus === 'incoming'){
-                agentSIP.jssipAnswerCall(this.call)
+            if (this.statusSession === 'incoming'){
+                agentSIP.jssipAnswerCall(this.sessionSIP.call)
             } else {
                 agentSIP.jssipCall(this.uri)
             }
@@ -131,30 +131,11 @@
          * @param {MouseEvent} event
          * */
         onClickBtnHangup: function(event){
-            if (!this.call) return;
+            if (!this.sessionSIP) return;
 
-            agentSIP.jssipTerminateCall(this.call)
-        },
-
-        /**
-         * Регистрация на события сессии
-         * */
-        registerCallSession: function(){
-            var call = this.call;
-            var self = this;
-
-            // Set call event handlers
-            call.on('progress', function(e) {
-                self.callStatus = 'in-progress';
-            });
-
-            call.on('accepted', function() {
-                self.callStatus = 'answered';
-            });
-
-            call.on('ended', function(e) {
-                self.callStatus = 'terminated';
-            });
+            selfView.src = '';
+            remoteView.src = '';
+            agentSIP.jssipTerminateCall(this.sessionSIP.call)
         }
     };
 
@@ -162,8 +143,33 @@
         events: {
             'click #btnStart': 'onClickBtnStartSip',
             'click #btnCall': 'onClickBtnCallSip',
-            'click .js-btnPhoneUp': 'onClickBtnDial',
-            'click .js-btnPhoneDown': 'onClickBtnHangup'
+            'click #js-btnPhoneUp': 'onClickBtnDial',
+            'click #js-btnPhoneDown': 'onClickBtnHangup'
+        },
+        template: function(){
+            with (this){
+
+                var string = `
+                    <style>
+                        .b-agent-bar{
+                            padding: 10px;
+                            border: 1px dashed gray;
+                            margin: 20px;
+                        }
+                        button{
+                        }
+                    </style>
+                    <div class="b-agent-bar">
+                        <p>Status session: ${statusSession}</p>
+                        <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
+                        <button id="btnCall" type="button" class="btn btn-primary btn-block">Call the number</button>
+                        <button id="js-btnPhoneUp" type="button" class="btn btn-primary btn-block">Answer a call</button>
+                        <button id="js-btnPhoneDown" type="button" class="btn btn-primary btn-block">Put down</button>
+                    </div>
+                `
+            }
+
+            return string;
         }
     });
 })();

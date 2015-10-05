@@ -29,18 +29,29 @@
         width: 100%;
     }
     .local, .remote{
-        width: 30%;
+        width: 10%;
+        min-width: 100px;
         display: inline-block;
     }
     textarea{
         width: 100%;
     }
+
 </style>
 <div class="container">
     <data-area id="dataAreaExample"></data-area>
     <agent-bar id="agentBarExample"></agent-bar>
 
-    <div>
+    <style>
+        .b-video{
+            padding: 10px;
+            border: 1px dashed gray;
+            margin: 20px;
+        }
+        button{
+        }
+    </style>
+    <div class="b-video">
         <div class="local">
             <p>Local Video</p>
             <video autoplay id="selfView" src=""></video>

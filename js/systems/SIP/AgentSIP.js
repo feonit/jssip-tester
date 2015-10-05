@@ -5,258 +5,33 @@ var AgentSIP = (function() {
     function _isString(val) { return typeof val === 'string' }
 
     function AgentSIP() {
-        // Active session collection
 
-        /**
-         * @param {Array} array of RTCSession
-         * */
-        this.sessions = [];
-        this.session = null;
+        /** @type {JsSIP.UA} */
         this.ua = null;
+
+        this.statusConnection = null;
+        this.statusRegistration = null;
+
+        /** @abstract */
+        this.onConnecting = function(){},
+        /** @abstract */
+        this.onConnected = function(){},
+        /** @abstract */
+        this.onDisconnected = function(){},
+        /** @abstract */
+        this.onRegistered = function(){},
+        /** @abstract */
+        this.onUnregistered = function(){},
+        /** @abstract */
+        this.onRegistrationFailed = function(){},
+        /** @abstract */
+        this.onNewRTCSession = function(){},
+        /** @abstract */
+        this.onNewRTCSessionIncoming = function(){}
     }
 
     AgentSIP.prototype = {
         constructor: AgentSIP,
-
-        /**
-         * JsSIP.UA newRTCSession event listener
-         * @public
-         * @this {AgentSIP}
-         * @param {Object} e — event
-         * */
-        new_call : function(e) {
-            if ( ! this instanceof AgentSIP) throw TypeError('Illegal invocation');
-
-            /** @type {JsSIP.RTCSession} */
-            var call = e.session;
-
-            /** @type {JsSIP.NameAddrHeader} */
-            var addr = call.remote_identity;
-
-            /** @type {JsSIP.URI} */
-            var uri = addr.uri;
-
-            /** @type {String} */
-            var display_name = call.remote_identity.display_name || uri.user;
-
-            /** Returns a String representing the AoR of the URI
-             * @type {String}
-             * */
-            var aor = uri.toAor();
-
-            var session = this._createSession(aor);
-
-            // We already have a session with this peer
-            if (session) {
-                if (session.call && !session.call.isEnded()) {
-                    call.terminate();
-                    return;
-                } else {
-                    session.call = call;
-                }
-
-                // new session
-            } else {
-                session = this._createSession(display_name, uri.toAor());
-                session.call = call;
-            }
-
-            this.setCallEventHandlers(e);
-        },
-
-        /**
-         * Возвращает сохраненную сессию по идентификатору
-         * @private
-         * @param {String} uri AoR
-         * @return {null || session}
-         * */
-        _getSession : function(uri) {
-            var idx,
-                session = null;
-
-            for(idx in this.sessions) {
-                if (this.sessions[idx].uri === uri) {
-                    session = this.sessions[idx];
-                    break;
-                }
-            }
-
-            return session;
-        },
-
-        /**
-         * @private
-         * @param {String} display_name
-         * @param {String} uri AoR
-         * */
-        _createSession: function(display_name, uri){
-            // Add a session object to the session collection
-            var session;
-
-            session = this._getSession(uri);
-
-            if (!session) {
-                session = new SessionSIP(display_name, uri);
-                this.sessions.push(session);
-            }
-            return session;
-        },
-
-        removeSession: function(uri, force) {
-            // remove a session object from the session collection
-            console.log('Tryit: removeSession');
-            var idx, session;
-
-            for(idx in this.sessions) {
-                session = this.sessions[idx];
-                if (session.uri === uri) {
-
-                    // living chat session
-                    if (!force && session.chat.length) {
-                        session.call = null;
-                    } else {
-                        //session.compositionIndicator.close();
-                        this.sessions.splice(idx,1);
-                    }
-                }
-            }
-        },
-
-        /**
-         * @public
-         * @param {JsSIP.RTCSession} call
-         * */
-        jssipAnswerCall: function(call) {
-            //if ( ! this instanceof JsSIP.RTCSession) throw TypeError('Illegal invocation');
-
-            if (!call) return;
-
-            call.answer({
-                pcConfig: peerconnection_config,
-                // TMP:
-                mediaConstraints: {audio: true, video: true},
-                //extraHeaders: [
-                //    'X-Can-Renegotiate: ' + String(localCanRenegotiateRTC())
-                //],
-                rtcOfferConstraints: {
-                    offerToReceiveAudio: 1,
-                    offerToReceiveVideo: 1
-                }
-            });
-        },
-
-        /**
-         * @public
-         * @param {JsSIP.RTCSession} call
-         * */
-        jssipTerminateCall: function(call) {
-            //if ( ! this instanceof JsSIP.RTCSession) throw TypeError('Illegal invocation');
-            if (call){
-                call.terminate();
-            }
-        },
-
-        /**
-         * @param {String} target — Number of opponent
-         * */
-        jssipCall : function(target) {
-            console.log('Tryit: buttonDialClick');
-
-            this.ua.call(target, {
-                pcConfig: peerconnection_config,
-                mediaConstraints: { audio: true, video: true },
-                extraHeaders: [
-                    'X-Can-Renegotiate: true'
-                ],
-                rtcOfferConstraints: {
-                    offerToReceiveAudio: 1,
-                    offerToReceiveVideo: 1
-                }
-            });
-        },
-
-        /**
-         * @this {AgentSIP}
-         * */
-        setCallEventHandlers : function(e){
-            var request = e.request,
-                call = e.session;
-
-            // check custom X-Can-Renegotiate header field
-            if (call.direction === 'incoming') {
-                call.data.remoteCanRenegotiateRTC = call.request.getHeader('X-Can-Renegotiate') !== 'false';
-
-                this.onNewRTCSessionIncoming();
-
-                // i rendered always 1 session
-
-                sessionComponent.setState({
-                    data: this.sessions[0]
-                });
-            }
-            // Failed
-            call.on('failed',function(e) {
-                alert('failed')
-            });
-
-            call.on('connecting', function() {
-                if (call.connection.getLocalStreams().length > 0) {
-                    window.localStream = call.connection.getLocalStreams()[0];
-                }
-            });
-
-            // Progress
-            call.on('progress',function(e){});
-
-            // Started
-            call.on('accepted',function(e){
-                //Attach the streams to the views if it exists.
-                if (call.connection.getLocalStreams().length > 0) {
-                    localStream = call.connection.getLocalStreams()[0];
-
-                    selfView.src = window.URL.createObjectURL(localStream);
-
-                    selfView.volume = 0;
-
-                    // TMP
-                    window.localStream = localStream;
-                }
-
-                if (e.originator === 'remote') {
-                    call.data.remoteCanRenegotiateRTC = e.response.getHeader('X-Can-Renegotiate') !== 'false';
-                }
-            });
-
-            call.on('addstream', function(e) {
-                remoteStream = e.stream;
-
-                // Attach remote stream to remoteView
-                remoteView.src = window.URL.createObjectURL(remoteStream);
-            });
-
-            // NewDTMF
-            call.on('newDTMF',function(e) {});
-
-            call.on('hold',function(e) {});
-
-            call.on('unhold',function(e) {});
-
-            // Ended
-            call.on('ended', function(e) {});
-
-            // received UPDATE
-            call.on('update', function(e) {});
-
-            // received reINVITE
-            call.on('reinvite', function(e) {});
-
-            // received REFER
-            call.on('refer', function(e) {});
-
-            // received INVITE replacing this session
-            call.on('replaces', function(e) {});
-        },
-
         /**
          * @this {AgentSIP}
          * @param {String} uri
@@ -311,46 +86,123 @@ var AgentSIP = (function() {
 
             var that = this;
             this.ua.on('connecting', function(e){
+                that.statusConnection = 'connecting';
                 that.onConnecting();
             });
             this.ua.on('connected', function(e){
+                that.statusConnection = 'connected';
                 that.onConnected();
             });
             this.ua.on('disconnected', function(e){
+                that.statusConnection = 'disconnected';
                 that.onDisconnected();
             });
             this.ua.on('registered', function(e){
+                that.statusRegistration = 'registered';
                 that.onRegistered();
             });
             this.ua.on('unregistered', function(e){
+                that.statusRegistration = 'unregistered';
                 that.onUnregistered();
             });
             this.ua.on('registrationFailed', function(e){
+                that.statusRegistration = 'registrationFailed';
                 that.onRegistrationFailed();
             });
             this.ua.on('newRTCSession', function(e) {
-                // Set a global '_Session' variable with the session for testing.
-                _Session = e.session;
-                that.new_call(e);
+                that.constructor.prototype.onNewRTCSession.call(that, e);
                 that.onNewRTCSession();
             });
         },
-        /** @abstract */
-        onConnecting: function(){},
-        /** @abstract */
-        onConnected: function(){},
-        /** @abstract */
-        onDisconnected: function(){},
-        /** @abstract */
-        onRegistered: function(){},
-        /** @abstract */
-        onUnregistered: function(){},
-        /** @abstract */
-        onRegistrationFailed: function(){},
-        /** @abstract */
-        onNewRTCSession: function(){},
-        /** @abstract */
-        onNewRTCSessionIncoming: function(){}
+        /**
+         * @param {String} target — Number of opponent
+         * @return {SessionSIP}
+         * */
+        jssipCall : function(target) {
+            agentSIP.session = this.ua.call(target, {
+                pcConfig: peerconnection_config,
+                mediaConstraints: { audio: true, video: true },
+                extraHeaders: [
+                    'X-Can-Renegotiate: true'
+                ],
+                rtcOfferConstraints: {
+                    offerToReceiveAudio: 1,
+                    offerToReceiveVideo: 1
+                }
+            });
+
+            var sessionSIP = new SessionSIP('display_name', target, agentSIP.session);
+
+            return sessionSIP;
+        },
+        /**
+         * @public
+         * @param {JsSIP.RTCSession} session
+         * */
+        jssipAnswerCall: function(session) {
+            session.answer({
+                pcConfig: peerconnection_config,
+                mediaConstraints: {audio: true, video: true},
+                rtcOfferConstraints: {
+                    offerToReceiveAudio: 1,
+                    offerToReceiveVideo: 1
+                }
+            });
+        },
+
+        /**
+         * @public
+         * @param {JsSIP.RTCSession} session
+         * */
+        jssipTerminateCall: function(session) {
+            session.terminate();
+        },
+
+        /**
+         * JsSIP.UA newRTCSession event listener
+         * @public
+         * @this {AgentSIP}
+         * @param {Object} e — event
+         * */
+        onNewRTCSession : function(e) {
+            if ( ! this instanceof AgentSIP) throw TypeError('Illegal invocation');
+
+            /** @type {JsSIP.RTCSession} */
+            var session = e.session;
+
+            /** @type {JsSIP.NameAddrHeader} */
+            var addr = session.remote_identity;
+
+            /** @type {JsSIP.URI} */
+            var uri = addr.uri;
+
+            /** @type {String} */
+            var display_name = session.remote_identity.display_name || uri.user;
+
+            /** Returns a String representing the AoR of the URI
+             * @type {String}
+             * */
+            var aor = uri.toAor();
+
+            /** @type {SessionSIP}*/
+
+            if (agentBarExample.sessionSIP && !agentBarExample.sessionSIP.call.isEnded()){
+                agentBarExample.sessionSIP.call.terminate();
+            }
+
+            //var sessionSIP = new SessionSIP(display_name, aor, session);
+
+            // check custom X-Can-Renegotiate header field
+            if (session.direction === 'incoming') {
+                session.data.remoteCanRenegotiateRTC = session.request.getHeader('X-Can-Renegotiate') !== 'false';
+
+                this.onNewRTCSessionIncoming();
+            }
+
+            //agentBarExample.setState({
+            //    sessionSIP: sessionSIP
+            //});
+        },
     };
 
     return AgentSIP;

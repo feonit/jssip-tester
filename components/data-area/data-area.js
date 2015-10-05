@@ -68,7 +68,25 @@
             with (this){
 
                 var string = `
-                    <div class="data-b">
+                    <style>
+                        .b-data-area{
+                            padding: 10px;
+                            border: 1px dashed gray;
+                            margin: 20px;
+                            width: 30%;
+                            min-width: 250px;
+                            max-width: 500px;
+                        }
+                        .form-group{
+                            position: relative;
+                            padding: 5px;
+                        }
+                        .form-control{
+                            position: absolute;
+                            right: 0;
+                        }
+                    </style>
+                    <div class="b-data-area">
 
                         <div class="form-group">
                             <label for="fieldName">Name</label>
