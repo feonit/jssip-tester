@@ -20,7 +20,7 @@ var AudioPlayer = (function(document){
             if (typeof soundFileSrc !== 'string') throw TypeError('src parameter is not valid');
 
             options || (options = {
-                volume: 1
+                volume: 0.5
             });
 
             this.AudioPlayer.setAttribute("src", soundFileSrc);

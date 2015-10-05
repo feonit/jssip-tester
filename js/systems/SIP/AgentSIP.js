@@ -111,7 +111,8 @@ var AgentSIP = (function() {
             });
             this.ua.on('newRTCSession', function(e) {
                 that.constructor.prototype.onNewRTCSession.call(that, e);
-                that.onNewRTCSession();
+                var displayName = e.session.remote_identity.display_name || e.session.remote_identity.user;
+                that.onNewRTCSession( new SessionSIP(displayName, null, e.session) );
             });
         },
         /**

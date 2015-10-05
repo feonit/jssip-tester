@@ -41,28 +41,33 @@
                 }
             );
 
-            agentSIP.onConnecting = (function(e){
+            var that = this;
+
+            agentSIP.onConnecting = (function(){
                 logAreaExample.log('connecting', 'WebSocket connection events')
             });
-            agentSIP.onConnected = (function(e){
+            agentSIP.onConnected = (function(){
                 logAreaExample.log('connected', 'WebSocket connection events')
             });
-            agentSIP.onDisconnected = (function(e){
+            agentSIP.onDisconnected = (function(){
                 logAreaExample.log('disconnected', 'WebSocket connection events')
             });
-            agentSIP.onRegistered = (function(e){
+            agentSIP.onRegistered = (function(){
                 logAreaExample.log('registered', 'SIP registration events')
             });
-            agentSIP.onUnregistered = (function(e){
+            agentSIP.onUnregistered = (function(){
                 logAreaExample.log('unregistered', 'SIP registration events')
             });
-            agentSIP.onRegistrationFailed = (function(e){
+            agentSIP.onRegistrationFailed = (function(){
                 logAreaExample.log('registrationFailed', 'SIP registration events')
             });
-            agentSIP.onNewRTCSession = (function(e) {
+            agentSIP.onNewRTCSession = (function(sessionSIP) {
+                that.sessionSIP = sessionSIP;
+                that.statusSession = that.sessionSIP.call.direction;
+                that.displayName = that.sessionSIP.displayName;
                 logAreaExample.log('newRTCSession', 'New incoming or outgoing call event');
             });
-            agentSIP.onNewRTCSessionIncoming = (function(e) {
+            agentSIP.onNewRTCSessionIncoming = (function() {
                 logAreaExample.log('onNewRTCSessionIncoming', 'New incoming or outgoing call event');
                 audioPlayer.playSound("sounds/incoming-call2.ogg");
             });
@@ -104,7 +109,7 @@
                 logAreaExample.log('addstream', 'Making outbound calls')
             };
 
-            sessionSIP.onEnded = function(e){
+            sessionSIP.onEnded = function(){
                 that.statusSession = 'terminated';
                 logAreaExample.log('ended', 'Making outbound calls')
             };

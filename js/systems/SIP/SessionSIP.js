@@ -37,7 +37,7 @@ var SessionSIP = (function() {
             });
 
             this.call.on('confirmed', function(e){
-                selfView.src = window.URL.createObjectURL(agentSIP.session.connection.getLocalStreams()[0]);
+                selfView.src = window.URL.createObjectURL(that.call.connection.getLocalStreams()[0]);
                 that.onConfirmed();
             });
 
