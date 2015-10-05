@@ -187,8 +187,8 @@ var AgentSIP = (function() {
 
             /** @type {SessionSIP}*/
 
-            if (agentBarExample.sessionSIP && !agentBarExample.sessionSIP.call.isEnded()){
-                agentBarExample.sessionSIP.call.terminate();
+            if (agentBarExample.sessionSIP && !agentBarExample.sessionSIP.session.isEnded()){
+                agentBarExample.sessionSIP.session.terminate();
             }
 
             //var sessionSIP = new SessionSIP(display_name, aor, session);

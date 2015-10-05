@@ -1,11 +1,11 @@
 var SessionSIP = (function() {
 
-    function SessionSIP (display_name, uri, call) {
+    function SessionSIP (display_name, uri, session) {
         this.uri = uri;
         this.displayName = display_name;
-        this.call = call || null;
+        this.session = session || null;
 
-        if (this.call) {
+        if (this.session) {
             this.bindEvendCallHandlers();
         }
 
@@ -27,40 +27,40 @@ var SessionSIP = (function() {
         bindEvendCallHandlers: function(){
             var that = this;
 
-            this.call.on('progress', function(e){
+            this.session.on('progress', function(e){
                 that.onProgress();
             });
 
-            this.call.on('failed', function(e){
+            this.session.on('failed', function(e){
                 alert('failed');
                 that.onFailed();
             });
 
-            this.call.on('confirmed', function(e){
-                selfView.src = window.URL.createObjectURL(that.call.connection.getLocalStreams()[0]);
+            this.session.on('confirmed', function(e){
+                selfView.src = window.URL.createObjectURL(that.session.connection.getLocalStreams()[0]);
                 that.onConfirmed();
             });
 
-            this.call.on('addstream', function(e){
+            this.session.on('addstream', function(e){
                 var remoteStream = e.stream;
                 remoteView.src = window.URL.createObjectURL(remoteStream);
                 that.onAddstream();
             });
 
-            this.call.on('ended', function(e){
+            this.session.on('ended', function(e){
                 that.onEnded();
             });
 
-            this.call.on('connecting', function(e){
-                if (that.call.connection.getLocalStreams().length > 0) {
-                    window.localStream = that.call.connection.getLocalStreams()[0];
+            this.session.on('connecting', function(e){
+                if (that.session.connection.getLocalStreams().length > 0) {
+                    window.localStream = that.session.connection.getLocalStreams()[0];
                 }
             });
 
-            this.call.on('accepted', function(e){
+            this.session.on('accepted', function(e){
                 //Attach the streams to the views if it exists.
-                if (that.call.connection.getLocalStreams().length > 0) {
-                    localStream = that.call.connection.getLocalStreams()[0];
+                if (that.session.connection.getLocalStreams().length > 0) {
+                    localStream = that.session.connection.getLocalStreams()[0];
 
                     selfView.src = window.URL.createObjectURL(localStream);
 
@@ -71,7 +71,7 @@ var SessionSIP = (function() {
                 }
 
                 if (e.originator === 'remote') {
-                    that.call.data.remoteCanRenegotiateRTC = e.response.getHeader('X-Can-Renegotiate') !== 'false';
+                    that.session.data.remoteCanRenegotiateRTC = e.response.getHeader('X-Can-Renegotiate') !== 'false';
                 }
                 that.onAccepted();
             });

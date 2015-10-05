@@ -15,6 +15,7 @@ var AudioPlayer = (function(document){
          * @public
          * @param {String} soundFileSrc — url for sound file
          * @param {Object} options — Options for HTMLAudioElement
+         * @throw {TypeError} "src parameter is not valid"
          * */
         playSound : function (soundFileSrc, options) {
             if (typeof soundFileSrc !== 'string') throw TypeError('src parameter is not valid');

@@ -63,12 +63,12 @@
             });
             agentSIP.onNewRTCSession = (function(sessionSIP) {
                 that.sessionSIP = sessionSIP;
-                that.statusSession = that.sessionSIP.call.direction;
+                that.statusSession = that.sessionSIP.session.direction;
                 that.displayName = that.sessionSIP.displayName;
-                logAreaExample.log('newRTCSession', 'New incoming or outgoing call event');
+                logAreaExample.log('newRTCSession', 'New incoming or outgoing session event');
             });
             agentSIP.onNewRTCSessionIncoming = (function() {
-                logAreaExample.log('onNewRTCSessionIncoming', 'New incoming or outgoing call event');
+                logAreaExample.log('onNewRTCSessionIncoming', 'New incoming or outgoing session event');
                 audioPlayer.playSound("sounds/incoming-call2.ogg");
             });
         },
@@ -93,25 +93,25 @@
 
             sessionSIP.onProgress = function (){
                 that.statusSession = 'in-progress';
-                logAreaExample.log('progress', 'Making outbound calls')
+                logAreaExample.log('progress', 'Making outbound sessions')
             };
 
             sessionSIP.onFailed = function(){
                 that.statusSession = 'failed';
-                logAreaExample.log('failed', 'Making outbound calls')
+                logAreaExample.log('failed', 'Making outbound sessions')
             };
 
             sessionSIP.onConfirmed = function(){
-                logAreaExample.log('confirmed', 'Making outbound calls')
+                logAreaExample.log('confirmed', 'Making outbound sessions')
             };
 
             sessionSIP.onAddstream = function(){
-                logAreaExample.log('addstream', 'Making outbound calls')
+                logAreaExample.log('addstream', 'Making outbound sessions')
             };
 
             sessionSIP.onEnded = function(){
                 that.statusSession = 'terminated';
-                logAreaExample.log('ended', 'Making outbound calls')
+                logAreaExample.log('ended', 'Making outbound sessions')
             };
 
             sessionSIP.onAccepted = function(){
@@ -126,7 +126,7 @@
             if (!this.sessionSIP) return;
 
             if (this.statusSession === 'incoming'){
-                agentSIP.jssipAnswerCall(this.sessionSIP.call)
+                agentSIP.jssipAnswerCall(this.sessionSIP.session)
             } else {
                 agentSIP.jssipCall(this.uri)
             }
@@ -140,7 +140,7 @@
 
             selfView.src = '';
             remoteView.src = '';
-            agentSIP.jssipTerminateCall(this.sessionSIP.call)
+            agentSIP.jssipTerminateCall(this.sessionSIP.session)
         }
     };
 
