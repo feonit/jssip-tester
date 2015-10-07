@@ -40,25 +40,5 @@
         }
     };
 
-    HTMLElementComponent.register('log-area', HTMLElementComponentLogArea, {
-        template: function(){
-            with(this){
-                return `
-                    <style>
-                    .b-log-area{
-                        padding: 10px;
-                        border: 1px dashed gray;
-                        margin: 20px;
-                    }
-                    </style>
-                    <div class="b-log-area">
-                    <p>
-                        <label for="textarea">Log:</label>
-                    </p>
-                    <textarea style="width: 100%" id="textarea" class="form-control" rows="15" disabled>${textLog}</textarea>
-                    </div>
-                `
-            }
-        }
-    });
+    HTMLElementComponent.register('log-area', HTMLElementComponentLogArea);
 })();

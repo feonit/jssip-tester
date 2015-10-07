@@ -15,6 +15,7 @@
         this.uri = 'not uri is here';
         this.displayName = 'not display name is here';
         this.statusSession = '...';
+        this.isStartedAgent = false;
     }
 
     HTMLElementComponentAgentBar.prototype = {
@@ -150,31 +151,6 @@
             'click #btnCall': 'onClickBtnCallSip',
             'click #js-btnPhoneUp': 'onClickBtnDial',
             'click #js-btnPhoneDown': 'onClickBtnHangup'
-        },
-        template: function(){
-            with (this){
-
-                var string = `
-                    <style>
-                        .b-agent-bar{
-                            padding: 10px;
-                            border: 1px dashed gray;
-                            margin: 20px;
-                        }
-                        button{
-                        }
-                    </style>
-                    <div class="b-agent-bar">
-                        <p>Status session: ${statusSession}</p>
-                        <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
-                        <button id="btnCall" type="button" class="btn btn-primary btn-block">Call the number</button>
-                        <button id="js-btnPhoneUp" type="button" class="btn btn-primary btn-block">Answer a call</button>
-                        <button id="js-btnPhoneDown" type="button" class="btn btn-primary btn-block">Put down</button>
-                    </div>
-                `
-            }
-
-            return string;
         }
     });
 })();

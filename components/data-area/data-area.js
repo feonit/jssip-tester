@@ -4,10 +4,10 @@
 
 (function(){
     function HTMLElementComponentDataArea(){
-        this.name = '1000';
-        this.wsUri = 'wss://sip.nefrosovet.ru:443';
-        this.realm = 'sip.nefrosovet.ru';
-        this.displayName = 'test name';
+        this.name = '';
+        this.wsUri = '';
+        this.realm = '';
+        this.displayName = '';
         this.sipPassword = '';
         this.userName = '';
         this.number = '';
@@ -15,6 +15,8 @@
 
     HTMLElementComponentDataArea.prototype = {
         /**
+         * API
+         * @public
          * @throws {RangeError}
          * */
         getSIP_URI_my: function (){
@@ -27,6 +29,8 @@
             return 'sip:' + this.name + '@' + this.realm;
         },
         /**
+         * API
+         * @public
          * @throws {RangeError}
          * */
         getSIP_URI_conference: function (){
@@ -63,70 +67,6 @@
             'change #number' : function(event){
                 this.number = event.currentTarget.value;
             }
-        },
-        template: function(){
-            with (this){
-
-                var string = `
-                    <style>
-                        .b-data-area{
-                            padding: 10px;
-                            border: 1px dashed gray;
-                            margin: 20px;
-                            width: 30%;
-                            min-width: 250px;
-                            max-width: 500px;
-                        }
-                        .form-group{
-                            position: relative;
-                            padding: 5px;
-                        }
-                        .form-control{
-                            position: absolute;
-                            right: 0;
-                        }
-                    </style>
-                    <div class="b-data-area">
-
-                        <div class="form-group">
-                            <label for="fieldName">Name</label>
-                            <input type="text" class="form-control" id="name" value="${name}">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fieldWS_URI">WS URI</label>
-                            <input type="text" class="form-control" id="wsUri" value="${wsUri}">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fieldSIP_URI_realm">Realm</label>
-                            <input type="text" class="form-control" id="realm" placeholder="" value="${realm}">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="field_display_name">Display name</label>
-                            <input type="text" class="form-control" id="displayName" placeholder="" value="${displayName}">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fieldSIP_password">SIP password</label>
-                            <input type="text" class="form-control" id="sipPassword" value="${sipPassword}">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fieldSIP_URI_name">Username</label>
-                            <input type="text" class="form-control" id="userName" placeholder="" value="${userName}">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="fieldNumber">Number</label>
-                            <input type="text" class="form-control" id="number" value="${number}">
-                        </div>
-
-                    </div>
-                `;
-            }
-            return string;
         }
     });
 })();

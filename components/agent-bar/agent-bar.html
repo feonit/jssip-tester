@@ -1,4 +1,24 @@
 <template>
-
+    <style>
+        .b-agent-bar{
+            padding: 10px;
+            border: 1px dashed gray;
+            margin: 20px;
+        }
+        button{
+        }
+    </style>
+    <div class="b-agent-bar">
+        <p>Status session: ${statusSession}</p>
+        <button id="btnStart" type="button" class="btn btn-primary btn-block">Client start</button>
+        <button id="btnCall" type="button" class="btn btn-primary btn-block">Call the number</button>
+        <button id="js-btnPhoneUp" type="button" class="btn btn-primary btn-block">Answer a call</button>
+        <button id="js-btnPhoneDown" type="button" class="btn btn-primary btn-block">Put down</button>
+    </div>
 </template>
+<script src="../../js/HTMLElementComponent.js" type="text/javascript"></script>
+
 <script src="agent-bar.js" type="text/javascript"></script>
+
+<!-- Example of use -->
+<agent-bar></agent-bar>

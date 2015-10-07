@@ -4,13 +4,14 @@ var AgentSIP = (function() {
 
     function _isString(val) { return typeof val === 'string' }
 
+    /**
+     * @constructor AgentSIP
+     * */
     function AgentSIP() {
 
-        /** @type {JsSIP.UA} */
-        this.ua = null;
-
-        this.statusConnection = null;
-        this.statusRegistration = null;
+        this._ua = null;
+        this.statusConnection = '';
+        this.statusRegistration = '';
 
         /** @abstract */
         this.onConnecting = function(){},
@@ -80,36 +81,36 @@ var AgentSIP = (function() {
                 }
             }
 
-            this.ua = new JsSIP.UA(configuration);
+            this._ua = new JsSIP.UA(configuration);
 
-            this.ua.start();
+            this._ua.start();
 
             var that = this;
-            this.ua.on('connecting', function(e){
+            this._ua.on('connecting', function(e){
                 that.statusConnection = 'connecting';
                 that.onConnecting();
             });
-            this.ua.on('connected', function(e){
+            this._ua.on('connected', function(e){
                 that.statusConnection = 'connected';
                 that.onConnected();
             });
-            this.ua.on('disconnected', function(e){
+            this._ua.on('disconnected', function(e){
                 that.statusConnection = 'disconnected';
                 that.onDisconnected();
             });
-            this.ua.on('registered', function(e){
+            this._ua.on('registered', function(e){
                 that.statusRegistration = 'registered';
                 that.onRegistered();
             });
-            this.ua.on('unregistered', function(e){
+            this._ua.on('unregistered', function(e){
                 that.statusRegistration = 'unregistered';
                 that.onUnregistered();
             });
-            this.ua.on('registrationFailed', function(e){
+            this._ua.on('registrationFailed', function(e){
                 that.statusRegistration = 'registrationFailed';
                 that.onRegistrationFailed();
             });
-            this.ua.on('newRTCSession', function(e) {
+            this._ua.on('newRTCSession', function(e) {
                 that.constructor.prototype.onNewRTCSession.call(that, e);
                 var displayName = e.session.remote_identity.display_name || e.session.remote_identity.user;
                 that.onNewRTCSession( new SessionSIP(displayName, null, e.session) );
@@ -120,7 +121,7 @@ var AgentSIP = (function() {
          * @return {SessionSIP}
          * */
         jssipCall : function(target) {
-            agentSIP.session = this.ua.call(target, {
+            this._ua.call(target, {
                 pcConfig: peerconnection_config,
                 mediaConstraints: { audio: true, video: true },
                 extraHeaders: [

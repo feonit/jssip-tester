@@ -19,6 +19,16 @@ var storageManager = new StorageManager('dataAreaExample');
 
 document.addEventListener("DOMContentLoaded", ready);
 
+var dataAreaInitialState = {
+    name : '1000',
+    wsUri : 'wss://sip.nefrosovet.ru:443',
+    realm : 'sip.nefrosovet.ru',
+    displayName : 'test name',
+    sipPassword : '',
+    userName : '',
+    number : ''
+};
+
 function ready(){
     //var isCorrectVersion;
     //
