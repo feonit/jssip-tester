@@ -4,31 +4,27 @@
 
 window.HTMLElementComponent = (function () {
 
-    var _slice = Array.prototype.slice,
-        _forEach = Array.prototype.forEach,
-        _clone = function (source) {
-            var clone = {}, key, typeOf;
+    var _ = {};
 
-            for (key in source) {
-                if (!source.hasOwnProperty(key)) continue;// todo очень большой ненужный перебор
-
-                typeOf = typeof source[key];
-
-                // todo sub-objects
-                if (typeOf !== 'object') {
-                    clone[key] = source[key];
-                }
-            }
-            return clone;
-        },
-        _mixProto = function (obj, mixin) {
-        if (!mixin) return obj;
-        for (var key in mixin) {
-            if (!mixin.hasOwnProperty(key) || key === 'constructor') continue;
-            obj[key] = mixin[key]
+    /**
+     * Copy all of the own properties in the source
+     * */
+    _.extendOwn = function (destination, source) {
+        for (var key in source) {
+            if (!source.hasOwnProperty(key)) continue;
+            destination[key] = source[key]
         }
-        return obj;
+        return destination;
     };
+    /**
+     * Create a shallow-copied clone of the provided plain object.
+     * */
+    _.clone= function (object) {
+        return _.extendOwn({}, object)
+    };
+
+    var _slice = Array.prototype.slice,
+        _forEach = Array.prototype.forEach;;
 
     /**
      * @constructor HTMLElementComponent
@@ -45,35 +41,13 @@ window.HTMLElementComponent = (function () {
      * @public
      * */
     HTMLElementComponent.register = function(elementTagName, Constructor, options){
-        if ( !elementTagName ) throw 'need elementTagName';
-
-        var Proto = this._extend(Constructor, options);
-        document.registerElement(elementTagName, {
-            prototype: Proto
-        });
-        HTMLElementComponent.components[Constructor.name] = Constructor;
-    };
-    /**
-     * Here are all created components
-     * @type {Object}
-     * @public
-     * */
-    HTMLElementComponent.components = {};
-    /**
-     * Prototyping new component based on ElementComponent
-     * @param {Function} Constructor — some constructor for new HTMLElementComponent
-     * @param {Object} options
-     * @private
-     * */
-    HTMLElementComponent._extend = function(Constructor, options){
         options || (options = {});
+
+        if ( !elementTagName ) throw 'need elementTagName';
 
         var ownerDocument = document.currentScript.ownerDocument; // контекст его определения
         var Proto = Object.create(HTMLElementComponent.prototype);
-        Proto.constructor = Constructor;
-
         var templateFn;
-
         var elem = ownerDocument.getElementsByTagName('template')[0] || ownerDocument.querySelector('#template');
         var template = '`' + elem.innerHTML + '`';
 
@@ -87,10 +61,21 @@ window.HTMLElementComponent = (function () {
         Proto.options = options;
         Proto.templateFn = templateFn;
         Proto.Constructor = Constructor;
-        Proto = _mixProto(Proto, Constructor.prototype);
+        Proto = _.extendOwn(Proto, Constructor.prototype);
 
-        return Proto;
+        document.registerElement(elementTagName, {
+            prototype: Proto
+        });
+
+        HTMLElementComponent.components[Constructor.name] = Constructor;
     };
+    /**
+     * Here are all created components
+     * @type {Object}
+     * @public
+     * */
+    HTMLElementComponent.components = {};
+
     /**
      * HTMLElementComponent.prototype based on HTMLElement.prototype
      * */
@@ -99,15 +84,24 @@ window.HTMLElementComponent = (function () {
     Object.defineProperties(HTMLElementComponent.prototype, {
         'API': {
             get: function(){
-                return {
-                    'instance': Object.keys(this),
-                    'instance.prototype': Object.keys(this.constructor.prototype)
-                };
+                var that = this;
+                var returnView = {};
+
+                var instanceKeys = Object.keys(this);
+                instanceKeys.forEach(function(key){
+                    returnView['instance.' + key] = typeof that[key]
+                });
+                var protoKeys = Object.keys(this.constructor.prototype);
+                protoKeys.forEach(function(key){
+                    returnView['prototype.' + key] = typeof that[key]
+                });
+
+                return returnView;
             }
         }
     });
 
-    _mixProto (HTMLElementComponent.prototype, /** @lends HTMLElementComponent.prototype */{
+    _.extendOwn(HTMLElementComponent.prototype, /** @lends HTMLElementComponent.prototype */{
 
         constructor: HTMLElementComponent,
 
@@ -156,7 +150,7 @@ window.HTMLElementComponent = (function () {
                 this.Constructor.apply(this, arguments);
             }
 
-            this._setBehaviorProperties(_clone(this), function () {
+            this._setBehaviorProperties(_.clone(this), function () {
                 this._reRender();
             });
 
@@ -205,7 +199,6 @@ window.HTMLElementComponent = (function () {
 
             if ( !this instanceof HTMLElementComponent) return;
 
-            // todo clone objects
             this._preventChanges = true;
             for (key in props) {
                 this[key] = props[key];
@@ -267,7 +260,7 @@ window.HTMLElementComponent = (function () {
                 } else {
                     // try if this is a object or function
                     //setProperties(this.)
-                    throw 'value mast be a simple type'
+                    console.warn('value "'+ key +'" must be a primitive type');
                 }
             }
         },

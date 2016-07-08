@@ -5,8 +5,8 @@
 (function(){
 
     // dep
-    var dataAreaExample = window.dataAreaExample;
-    var logAreaExample = window.logAreaExample;
+    // var dataAreaExample = document.getElementById('dataAreaExample');
+    // var logAreaExample =document.getElementById('logAreaExample');
     var agentSIP = window.agentSIP;
     var audioPlayer = window.audioPlayer;
 
@@ -130,7 +130,7 @@
                 agentSIP.jssipAnswerCall(this.sessionSIP.session)
             } else {
                 agentSIP.jssipCall(this.uri)
-            }
+            }_
         },
         /**
          * @this {HTMLElementComponentAgentBar}

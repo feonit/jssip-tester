@@ -1,65 +1,42 @@
+!function(){
+    var AudioPlayer = window.AudioPlayer;
+    var AgentSIP = window.AgentSIP;
+    var StorageManager = window.StorageManager;
+    var JsSIP = window.JsSIP;
 
-var APP = {};
+    var _export = window;
 
-var peerconnection_config = {
-    "iceServers": [
-        {
-            "urls": ["stun:stun.l.google.com:19302"]
-        }
-    ],
-    "gatheringTimeout": 2000
-};
+    var audioPlayer = new AudioPlayer();
+    var agentSIP = new AgentSIP();
+    var storageManager = new StorageManager('dataAreaExample');
 
-var localStream, remoteStream;
+    document.addEventListener("DOMContentLoaded", ready);
 
-// dep SoundSystem
-var audioPlayer = new AudioPlayer();
-var agentSIP = new AgentSIP();
-var storageManager = new StorageManager('dataAreaExample');
+    function ready(){
+        var dataAreaExample = window.dataAreaExample;
 
-document.addEventListener("DOMContentLoaded", ready);
+        JsSIP.debug.enable('JsSIP:*');
 
-var dataAreaInitialState = {
-    name : '1000',
-    wsUri : 'wss://sip.nefrosovet.ru:443',
-    realm : 'sip.nefrosovet.ru',
-    displayName : 'test name',
-    sipPassword : '',
-    userName : '',
-    number : ''
-};
+        setTimeout(function(){
+            var data = storageManager.getProperties();
 
-function ready(){
-    //var isCorrectVersion;
-    //
-    //if ( JsSIP && (isCorrectVersion = JsSIP.version === '0.7.4') )
-    //    logAreaExample.log(JsSIP.name + ' ' + JsSIP.version);
-    //else
-    //    logAreaExample.error('Need JsSIP 0.7.4');
+            if (data){
+                dataAreaExample.setState(data);
+            }
 
-    // установить состояния для полей данных
-    JsSIP.debug.enable('JsSIP:*');
+            dataAreaExample.on('update', function(changes){
+                console.log();
 
-    setTimeout(function(){
-        var data = storageManager.getProperties();
+                var save = {};
 
-        if (data){
-            dataAreaExample.setState(data);
-        }
+                save[changes.name] = changes.newValue;
+                storageManager.setProperties(save);
+            })
 
-        dataAreaExample.on('update', function(changes){
-            console.log();
+        }, 300)
+    }
 
-            var save = {};
-
-            save[changes.name] = changes.newValue;
-            storageManager.setProperties(save);
-        })
-
-    }, 300)
-}
-
-
-
-
-
+    _export.audioPlayer = audioPlayer;
+    _export.agentSIP = agentSIP;
+    _export.audioPlayer = audioPlayer;
+}();

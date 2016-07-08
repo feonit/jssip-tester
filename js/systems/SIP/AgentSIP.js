@@ -1,6 +1,15 @@
 var AgentSIP = (function() {
 
+    var peerconnection_config = {"iceServers": [{"urls": ["stun:stun.l.google.com:19302"]}],"gatheringTimeout": 2000};
+
     var SessionSIP = window.SessionSIP;
+
+    var mediaConstraints = { audio: true, video: {
+        mandatory: {
+            minWidth: 1280,
+            minHeight: 720,
+        }
+    }};
 
     function _isString(val) { return typeof val === 'string' }
 
@@ -123,7 +132,7 @@ var AgentSIP = (function() {
         jssipCall : function(target) {
             this._ua.call(target, {
                 pcConfig: peerconnection_config,
-                mediaConstraints: { audio: true, video: true },
+                mediaConstraints: mediaConstraints,
                 extraHeaders: [
                     'X-Can-Renegotiate: true'
                 ],
@@ -144,7 +153,7 @@ var AgentSIP = (function() {
         jssipAnswerCall: function(session) {
             session.answer({
                 pcConfig: peerconnection_config,
-                mediaConstraints: {audio: true, video: true},
+                mediaConstraints: mediaConstraints,
                 rtcOfferConstraints: {
                     offerToReceiveAudio: 1,
                     offerToReceiveVideo: 1
